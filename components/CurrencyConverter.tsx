@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { EXCHANGE_RATES, CURRENCIES_LIST } from '../constants.ts';
-import { ArrowsRightLeftIcon, SpinnerIcon, TrendingUpIcon, GlobeAmericasIcon } from './Icons.tsx';
+import React, { useState, useMemo } from 'react';
+import { EXCHANGE_RATES, CURRENCIES_LIST } from '../constants';
+import { ArrowsRightLeftIcon, SpinnerIcon, TrendingUpIcon, GlobeAmericasIcon } from './Icons';
 
 // Helper for SVG Sparkline
 const Sparkline: React.FC<{ color: string }> = ({ color }) => {
@@ -27,7 +27,6 @@ export const CurrencyConverter: React.FC = () => {
   const [amount, setAmount] = useState('1000');
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('EUR');
-  const [isLive, setIsLive] = useState(true);
 
   const fromInfo = CURRENCIES_LIST.find(c => c.code === fromCurrency);
   const toInfo = CURRENCIES_LIST.find(c => c.code === toCurrency);
@@ -89,15 +88,17 @@ export const CurrencyConverter: React.FC = () => {
                             <p className="text-lg font-bold text-white">{fromCurrency}</p>
                             <p className="text-xs text-slate-500">{fromInfo?.name}</p>
                         </div>
-                        <select 
-                            value={fromCurrency} 
-                            onChange={(e) => setFromCurrency(e.target.value)} 
-                            className="absolute opacity-0 w-12 h-12 cursor-pointer"
-                        >
-                            {CURRENCIES_LIST.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
-                        </select>
-                        <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden cursor-pointer hover:border-white/30 transition-colors">
-                            <img src={`https://flagsapi.com/${fromInfo?.countryCode}/shiny/64.png`} alt={fromCurrency} className="w-full h-full object-cover" />
+                        <div className="relative">
+                            <select 
+                                value={fromCurrency} 
+                                onChange={(e) => setFromCurrency(e.target.value)} 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            >
+                                {CURRENCIES_LIST.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
+                            </select>
+                            <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden hover:border-white/30 transition-colors">
+                                <img src={`https://flagsapi.com/${fromInfo?.countryCode}/shiny/64.png`} alt={fromCurrency} className="w-full h-full object-cover" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -125,15 +126,17 @@ export const CurrencyConverter: React.FC = () => {
                             <p className="text-lg font-bold text-white">{toCurrency}</p>
                             <p className="text-xs text-slate-500">{toInfo?.name}</p>
                         </div>
-                        <select 
-                            value={toCurrency} 
-                            onChange={(e) => setToCurrency(e.target.value)} 
-                            className="absolute opacity-0 w-12 h-12 cursor-pointer right-10"
-                        >
-                            {CURRENCIES_LIST.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
-                        </select>
-                        <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden cursor-pointer hover:border-white/30 transition-colors">
-                            <img src={`https://flagsapi.com/${toInfo?.countryCode}/shiny/64.png`} alt={toCurrency} className="w-full h-full object-cover" />
+                        <div className="relative">
+                            <select 
+                                value={toCurrency} 
+                                onChange={(e) => setToCurrency(e.target.value)} 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            >
+                                {CURRENCIES_LIST.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
+                            </select>
+                            <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden hover:border-white/30 transition-colors">
+                                <img src={`https://flagsapi.com/${toInfo?.countryCode}/shiny/64.png`} alt={toCurrency} className="w-full h-full object-cover" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -157,5 +160,6 @@ export const CurrencyConverter: React.FC = () => {
                 <span>Execute Exchange</span>
             </button>
         </div>
-    );
+    </div>
+  );
 };
