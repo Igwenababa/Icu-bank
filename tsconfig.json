@@ -22,6 +22,8 @@
   "exclude": [
     "node_modules", 
     "dist",
+    "**/tasks.tsx",
+    "**/Tasks.tsx",
     "components/tasks.tsx",
     "components/Tasks.tsx",
     "components/components/Footer.tsx",
