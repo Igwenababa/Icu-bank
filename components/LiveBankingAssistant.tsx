@@ -119,13 +119,16 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
     useEffect(scrollToBottom, [transcripts]);
     
     const getAi = () => {
-        if (!process.env.API_KEY) return null;
-        return new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) return null;
+        return new GoogleGenAI({ apiKey });
     };
 
     const executeFunctionCall = (name: string, args: any): string => {
-        if (name === 'get_account_balance' && args.account_type) {
-            const accountTypeStr = args.account_type.toLowerCase();
+        if (!name) return "I'm sorry, I didn't understand the request.";
+        
+        if (name === 'get_account_balance' && args && args.account_type) {
+            const accountTypeStr = String(args.account_type).toLowerCase();
             let account: Account | undefined;
             if (accountTypeStr.includes('checking')) account = accounts.find(a => a.type === AccountType.CHECKING);
             else if (accountTypeStr.includes('savings')) account = accounts.find(a => a.type === AccountType.SAVINGS);
@@ -135,8 +138,8 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
             const lastTx = transactions[0];
             return lastTx ? `Your last transaction was for ${lastTx.sendAmount.toLocaleString('en-US', {style:'currency', currency: 'USD'})} to ${lastTx.recipient.fullName}, about ${timeSince(lastTx.statusTimestamps.Submitted)}.` : "You have no transaction history.";
         }
-        if (name === 'initiate_transfer' && args.recipient_name && args.amount) {
-            onInitiateTransfer(args.recipient_name, args.amount);
+        if (name === 'initiate_transfer' && args && args.recipient_name && args.amount) {
+            onInitiateTransfer(String(args.recipient_name), Number(args.amount));
             return "OK, I've started the transfer for you. Please review the details on screen.";
         }
         return "I'm sorry, I couldn't perform that action.";
@@ -223,7 +226,7 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
         sessionPromiseRef.current = ai.live.connect({
             model: 'gemini-2.5-flash-native-audio-preview-09-2025',
             config: {
-                systemInstruction: `You are a friendly banking assistant for iCredit Union®. Always respond in ${languageMap[chatLanguage]}. ${historyForVoice}`,
+                systemInstruction: `You are a friendly banking assistant for iCredit Union®. Always respond in ${languageMap[chatLanguage] || 'English'}. ${historyForVoice}`,
                 tools: [{ functionDeclarations: getToolDeclarations() }],
                 responseModalities: [Modality.AUDIO],
                 inputAudioTranscription: {},
@@ -249,8 +252,8 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                 onmessage: async (message: LiveServerMessage) => {
                     const { turnComplete, inputTranscription, outputTranscription } = message.serverContent || {};
 
-                    if (inputTranscription) setTranscripts(prev => updateLastTranscript(prev, 'user', inputTranscription.text));
-                    if (outputTranscription) setTranscripts(prev => updateLastTranscript(prev, 'model', outputTranscription.text));
+                    if (inputTranscription && inputTranscription.text) setTranscripts(prev => updateLastTranscript(prev, 'user', inputTranscription.text));
+                    if (outputTranscription && outputTranscription.text) setTranscripts(prev => updateLastTranscript(prev, 'model', outputTranscription.text));
                     if (turnComplete) finalizeTranscripts();
 
                     if (message.toolCall?.functionCalls) {
@@ -260,7 +263,6 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                         }
                     }
 
-                    // FIX: Safely access optional chain
                     const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
                     if (audioData) {
                         setLiveStatus('speaking');
@@ -326,7 +328,7 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                 model: 'gemini-2.5-flash',
                 history: formattedHistory,
                 config: {
-                    systemInstruction: `You are a friendly and professional banking assistant for iCredit Union®. Always respond in ${languageMap[chatLanguage]}.`,
+                    systemInstruction: `You are a friendly and professional banking assistant for iCredit Union®. Always respond in ${languageMap[chatLanguage] || 'English'}.`,
                     tools: [{ functionDeclarations: getToolDeclarations() }]
                 }
             });

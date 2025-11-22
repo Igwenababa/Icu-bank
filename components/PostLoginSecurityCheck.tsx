@@ -39,7 +39,6 @@ const SecurityModule: React.FC<{
 
     useEffect(() => {
         let scanTimer: ReturnType<typeof setTimeout>;
-        let verifyTimer: ReturnType<typeof setTimeout>;
 
         const startTimer = setTimeout(() => {
             setInternalStatus('scanning');
@@ -52,7 +51,6 @@ const SecurityModule: React.FC<{
         return () => {
             clearTimeout(startTimer);
             clearTimeout(scanTimer);
-            clearTimeout(verifyTimer);
         };
     }, [delay]);
 
