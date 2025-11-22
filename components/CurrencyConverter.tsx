@@ -14,7 +14,7 @@ const Sparkline: React.FC<{ color: string }> = ({ color }) => {
         const max = Math.max(...data);
         const range = max - min || 1;
         return data.map((v, i) => `${(i / (data.length - 1)) * 100},${100 - ((v - min) / range) * 100}`).join(' ');
-    }, []);
+    }, [color]); // Dependency added although mostly static for this demo
 
     return (
         <svg viewBox="0 0 100 100" className="w-full h-12 opacity-50" preserveAspectRatio="none">
@@ -88,15 +88,15 @@ export const CurrencyConverter: React.FC = () => {
                             <p className="text-lg font-bold text-white">{fromCurrency}</p>
                             <p className="text-xs text-slate-500">{fromInfo?.name}</p>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-12 h-12">
                             <select 
                                 value={fromCurrency} 
                                 onChange={(e) => setFromCurrency(e.target.value)} 
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                             >
                                 {CURRENCIES_LIST.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
                             </select>
-                            <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden hover:border-white/30 transition-colors">
+                            <div className="w-full h-full rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden hover:border-white/30 transition-colors pointer-events-none">
                                 <img src={`https://flagsapi.com/${fromInfo?.countryCode}/shiny/64.png`} alt={fromCurrency} className="w-full h-full object-cover" />
                             </div>
                         </div>
@@ -126,15 +126,15 @@ export const CurrencyConverter: React.FC = () => {
                             <p className="text-lg font-bold text-white">{toCurrency}</p>
                             <p className="text-xs text-slate-500">{toInfo?.name}</p>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-12 h-12">
                             <select 
                                 value={toCurrency} 
                                 onChange={(e) => setToCurrency(e.target.value)} 
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                             >
                                 {CURRENCIES_LIST.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
                             </select>
-                            <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden hover:border-white/30 transition-colors">
+                            <div className="w-full h-full rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden hover:border-white/30 transition-colors pointer-events-none">
                                 <img src={`https://flagsapi.com/${toInfo?.countryCode}/shiny/64.png`} alt={toCurrency} className="w-full h-full object-cover" />
                             </div>
                         </div>
