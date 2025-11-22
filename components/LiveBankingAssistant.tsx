@@ -169,9 +169,10 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
             while(response.functionCalls && response.functionCalls.length > 0) {
                 const functionResponses = [];
                 for (const fc of response.functionCalls) {
-                    const result = executeFunctionCall(fc.name, fc.args);
+                    // Fallback for optional name in type definition
+                    const result = executeFunctionCall(fc.name || 'unknown_tool', fc.args);
                     functionResponses.push({
-                        functionResponse: { name: fc.name, response: { result } }
+                        functionResponse: { name: fc.name || 'unknown_tool', response: { result } }
                     });
                 }
                 response = await chatSessionRef.current.sendMessage({ message: functionResponses as any });
@@ -252,14 +253,22 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                 onmessage: async (message: LiveServerMessage) => {
                     const { turnComplete, inputTranscription, outputTranscription } = message.serverContent || {};
 
-                    if (inputTranscription && inputTranscription.text) setTranscripts(prev => updateLastTranscript(prev, 'user', inputTranscription.text));
-                    if (outputTranscription && outputTranscription.text) setTranscripts(prev => updateLastTranscript(prev, 'model', outputTranscription.text));
+                    if (inputTranscription && inputTranscription.text) {
+                        // Force string type for TS
+                        setTranscripts(prev => updateLastTranscript(prev, 'user', inputTranscription.text || ''));
+                    }
+                    if (outputTranscription && outputTranscription.text) {
+                        // Force string type for TS
+                        setTranscripts(prev => updateLastTranscript(prev, 'model', outputTranscription.text || ''));
+                    }
+                    
                     if (turnComplete) finalizeTranscripts();
 
                     if (message.toolCall?.functionCalls) {
                         for (const fc of message.toolCall.functionCalls) {
-                            const result = executeFunctionCall(fc.name, fc.args);
-                            sessionPromiseRef.current?.then(s => s.sendToolResponse({ functionResponses: { id: fc.id, name: fc.name, response: { result } } }));
+                            // Force string type for TS
+                            const result = executeFunctionCall(fc.name || 'unknown_tool', fc.args);
+                            sessionPromiseRef.current?.then(s => s.sendToolResponse({ functionResponses: { id: fc.id, name: fc.name || 'unknown_tool', response: { result } } }));
                         }
                     }
 
