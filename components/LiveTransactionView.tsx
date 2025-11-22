@@ -1,6 +1,4 @@
 
-
-
 import React, { useMemo } from 'react';
 import { Transaction, TransactionStatus } from '../types.ts';
 // FIX: Add missing icons
