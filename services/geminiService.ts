@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { NewsArticle, InsuranceProduct, LoanProduct, SystemUpdate, AccountType, VerificationLevel, AdvisorResponse, Cause } from '../types.ts';
 
@@ -99,7 +100,7 @@ export const getCountryBankingTip = async (countryName: string): Promise<Banking
   } catch (error) {
     console.warn("Error fetching banking tip from Gemini:", error);
     const errorResult: BankingTipResult = { 
-        tip: `Could not fetch banking tips at this time. Please ensure you have the correct details for ${countryName}.`, 
+        tip: `Ensure you have the correct IBAN/Account Number for ${countryName}.`, 
         isError: true 
     };
     tipCache.set(countryName, errorResult);
@@ -123,7 +124,9 @@ export const getFinancialNews = async (): Promise<FinancialNewsResult> => {
   if (!ai) {
     const result = {
       articles: [
-        { title: 'Global Markets Show Mixed Signals', summary: 'Major indices are fluctuating as investors weigh inflation concerns against positive corporate earnings.', category: 'Market Analysis' },
+        { title: 'Global Markets Show Resilience', summary: 'Major indices are stabilizing as investors digest recent economic data.', category: 'Market Analysis' },
+        { title: 'Fintech Innovation Peaks', summary: 'New technologies are streamlining cross-border payments faster than ever.', category: 'Technology' },
+        { title: 'Currency Trends to Watch', summary: 'Analysts predict minor fluctuations in major currency pairs this week.', category: 'Forex' },
       ],
       isError: false,
     };
@@ -170,7 +173,11 @@ export const getFinancialNews = async (): Promise<FinancialNewsResult> => {
   } catch (error) {
     console.warn("Error fetching financial news from Gemini:", error);
     const errorResult = {
-        articles: [ { title: 'AI News Feed Unavailable', summary: 'We are experiencing a temporary issue with our AI news service.', category: 'System Alert' } ],
+        articles: [ 
+            { title: 'Market Update Unavailable', summary: 'We are currently unable to fetch the latest live market news.', category: 'System Alert' },
+            { title: 'Trading Continues Normally', summary: 'All platform trading and transfer functions are fully operational.', category: 'Status' },
+            { title: 'Check Back Soon', summary: 'Our financial news feed will be restored shortly.', category: 'Update' }
+        ],
         isError: true,
     };
     newsCache.set(newsCacheKey, errorResult);
@@ -289,12 +296,13 @@ export const getFinancialAnalysis = async (financialDataJSON: string): Promise<{
 };
 
 export const getLoanProducts = async (): Promise<{ products: LoanProduct[], isError: boolean }> => {
+  const fallbackProducts: LoanProduct[] = [
+      { id: 'loan1', name: 'Personal Loan', description: 'Flexible financing for life\'s big moments.', benefits: ['Fixed rates', 'No origination fees', 'Quick funding'], interestRate: { min: 7.99, max: 19.99 } },
+      { id: 'loan2', name: 'Auto Loan', description: 'Competitive rates for new and used vehicles.', benefits: ['Flexible terms up to 72 months', 'Pre-approval available', 'Easy online application'], interestRate: { min: 5.49, max: 12.49 } },
+      { id: 'loan3', name: 'Home Improvement Loan', description: 'Fund your next renovation project with a simple, fixed-rate loan.', benefits: ['Borrow up to $50,000', 'No home equity required', 'Fast decision process'], interestRate: { min: 6.99, max: 15.99 } },
+  ];
+
   if (!ai) {
-    const fallbackProducts: LoanProduct[] = [
-        { id: 'loan1', name: 'Personal Loan', description: 'Flexible financing for life\'s big moments.', benefits: ['Fixed rates', 'No origination fees', 'Quick funding'], interestRate: { min: 7.99, max: 19.99 } },
-        { id: 'loan2', name: 'Auto Loan', description: 'Competitive rates for new and used vehicles.', benefits: ['Flexible terms up to 72 months', 'Pre-approval available', 'Easy online application'], interestRate: { min: 5.49, max: 12.49 } },
-        { id: 'loan3', name: 'Home Improvement Loan', description: 'Fund your next renovation project with a simple, fixed-rate loan.', benefits: ['Borrow up to $50,000', 'No home equity required', 'Fast decision process'], interestRate: { min: 6.99, max: 15.99 } },
-    ];
     return { products: fallbackProducts, isError: false };
   }
 
@@ -339,21 +347,17 @@ export const getLoanProducts = async (): Promise<{ products: LoanProduct[], isEr
     return { products: parsedJson.products, isError: false };
   } catch (error) {
     console.warn("Error fetching loan products from Gemini:", error);
-    const fallbackProducts: LoanProduct[] = [
-        { id: 'loan1', name: 'Personal Loan', description: 'Flexible financing for life\'s big moments.', benefits: ['Fixed rates', 'No origination fees', 'Quick funding'], interestRate: { min: 7.99, max: 19.99 } },
-        { id: 'loan2', name: 'Auto Loan', description: 'Competitive rates for new and used vehicles.', benefits: ['Flexible terms up to 72 months', 'Pre-approval available', 'Easy online application'], interestRate: { min: 5.49, max: 12.49 } },
-        { id: 'loan3', name: 'Home Improvement Loan', description: 'Fund your next renovation project with a simple, fixed-rate loan.', benefits: ['Borrow up to $50,000', 'No home equity required', 'Fast decision process'], interestRate: { min: 6.99, max: 15.99 } },
-    ];
     return { products: fallbackProducts, isError: true };
   }
 };
 
 export const getSystemUpdates = async (): Promise<{ updates: SystemUpdate[], isError: boolean }> => {
+  const fallback: SystemUpdate[] = [
+      { id: 'upd1', title: 'Scheduled Maintenance', date: new Date().toISOString(), description: 'System will be briefly unavailable for scheduled upgrades.', category: 'Maintenance' },
+      { id: 'upd2', title: 'New Feature: Virtual Cards', date: new Date(Date.now() - 86400000 * 5).toISOString(), description: 'You can now create virtual cards for secure online shopping.', category: 'New Feature' }
+  ];
+
   if (!ai) {
-    const fallback: SystemUpdate[] = [
-        { id: 'upd1', title: 'Scheduled Maintenance', date: new Date().toISOString(), description: 'System will be briefly unavailable for scheduled upgrades.', category: 'Maintenance' },
-        { id: 'upd2', title: 'New Feature: Virtual Cards', date: new Date(Date.now() - 86400000 * 5).toISOString(), description: 'You can now create virtual cards for secure online shopping.', category: 'New Feature' }
-    ];
     return { updates: fallback, isError: false };
   }
 
@@ -392,10 +396,6 @@ export const getSystemUpdates = async (): Promise<{ updates: SystemUpdate[], isE
     return { updates: parsedJson.updates, isError: false };
   } catch (error) {
     console.warn("Error fetching system updates from Gemini:", error);
-    const fallback: SystemUpdate[] = [
-        { id: 'upd1', title: 'Scheduled Maintenance', date: new Date().toISOString(), description: 'System will be briefly unavailable for scheduled upgrades.', category: 'Maintenance' },
-        { id: 'upd2', title: 'New Feature: Virtual Cards', date: new Date(Date.now() - 86400000 * 5).toISOString(), description: 'You can now create virtual cards for secure online shopping.', category: 'New Feature' }
-    ];
     return { updates: fallback, isError: true };
   }
 };
@@ -421,7 +421,7 @@ export const getSupportAnswer = async (query: string): Promise<{ answer: string,
     return { answer: answer.trim(), isError: false };
   } catch (error) {
     console.warn("Error fetching support answer from Gemini:", error);
-    return { answer: "Sorry, I was unable to process your request at this time.", isError: true };
+    return { answer: "I'm sorry, I'm having trouble connecting to my knowledge base right now.", isError: true };
   }
 };
 
@@ -490,6 +490,6 @@ export const getCauseDetails = async (causeTitle: string): Promise<{ details: Ca
     return { details: parsedJson, isError: false };
   } catch (error) {
     console.warn(`Error fetching cause details for ${causeTitle} from Gemini:`, error);
-    return { details: { description: 'Provides essential aid.', impacts: ['Impact 1', 'Impact 2'] }, isError: true };
+    return { details: { description: 'Your donation helps provide essential aid.', impacts: ['Provides immediate relief', 'Supports long-term recovery'] }, isError: true };
   }
 };
