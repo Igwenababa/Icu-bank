@@ -135,10 +135,29 @@ const TransactionRow: React.FC<{
                 <td className="py-4 px-6 text-slate-600 text-sm text-right">
                     <Highlight text={transaction.statusTimestamps[TransactionStatus.SUBMITTED].toLocaleDateString()} highlight={searchTerm} />
                 </td>
-                <td className="py-4 px-6">
-                    <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }} className="p-2 text-slate-400 hover:text-slate-800">
-                        <ChevronDownIcon className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                    </button>
+                <td className="py-4 px-6 text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                        <button 
+                            onClick={(e) => { 
+                                e.stopPropagation(); 
+                                onDownloadReceipt(transaction); 
+                            }} 
+                            disabled={isGeneratingPdf}
+                            className="p-2 text-slate-400 hover:text-primary rounded-full hover:bg-slate-100 transition-colors"
+                            title="Download Receipt"
+                        >
+                            {isGeneratingPdf ? <SpinnerIcon className="w-5 h-5 animate-spin" /> : <ArrowDownTrayIcon className="w-5 h-5" />}
+                        </button>
+                        <button 
+                            onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setIsExpanded(!isExpanded); 
+                            }} 
+                            className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-colors"
+                        >
+                            <ChevronDownIcon className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                    </div>
                 </td>
             </tr>
             {isExpanded && (

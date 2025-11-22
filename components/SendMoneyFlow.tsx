@@ -139,6 +139,8 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   const [deliverySpeed, setDeliverySpeed] = useState<'Standard' | 'Express'>('Standard');
   const [receiveCurrency, setReceiveCurrency] = useState<string>(selectedRecipient?.country.currency || 'GBP');
   const [rateLockCountdown, setRateLockCountdown] = useState(60);
+  const [liveRate, setLiveRate] = useState<number>(0);
+  const [isFetchingRate, setIsFetchingRate] = useState(false);
   
   // Recurring / Schedule State
   const [frequency, setFrequency] = useState('one-time');
@@ -166,10 +168,34 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   
   const sourceAccount = accounts.find(acc => acc.id === sourceAccountId);
 
+  // Fetch Rate
+  useEffect(() => {
+      const fetchRate = async () => {
+          setIsFetchingRate(true);
+          try {
+              const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+              const data = await response.json();
+              const rate = data.rates[receiveCurrency];
+              setLiveRate(rate || EXCHANGE_RATES[receiveCurrency] || 1);
+          } catch (e) {
+              console.warn("Rate fetch failed, using fallback");
+              setLiveRate(EXCHANGE_RATES[receiveCurrency] || 1);
+          } finally {
+              setIsFetchingRate(false);
+          }
+      };
+      
+      if (receiveCurrency === 'USD') {
+          setLiveRate(1);
+      } else {
+          fetchRate();
+      }
+  }, [receiveCurrency]);
+
   // Single Send calculations
   const fee = deliverySpeed === 'Express' ? EXPRESS_FEE : STANDARD_FEE;
   const numericSendAmount = parseFloat(sendAmount) || 0;
-  const exchangeRate = EXCHANGE_RATES[receiveCurrency] || 0;
+  const exchangeRate = liveRate > 0 ? liveRate : (EXCHANGE_RATES[receiveCurrency] || 1);
   const receiveAmount = numericSendAmount * exchangeRate;
   const totalCost = numericSendAmount + fee;
   
@@ -457,6 +483,16 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                 </div>
                                 <div className="mt-2 text-sm text-slate-400 font-medium">
                                     Available Balance: {sourceAccount?.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                                </div>
+                                <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center gap-2 animate-fade-in">
+                                    <ArrowPathIcon className={`w-4 h-4 text-primary ${isFetchingRate ? 'animate-spin' : ''}`} />
+                                    <span className="text-xs text-slate-300">
+                                        1 USD = <span className="font-bold text-white">{exchangeRate.toFixed(4)} {receiveCurrency}</span>
+                                    </span>
+                                    <span className="flex h-2 w-2 relative ml-1">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
                                 </div>
                                 {amountError && <div className="absolute bottom-2 left-0 right-0 text-red-400 text-xs font-bold">{amountError}</div>}
                             </div>

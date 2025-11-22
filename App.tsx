@@ -105,7 +105,7 @@ import { Ratings } from './components/Ratings';
 import { GlobalAid } from './components/GlobalAid';
 import { GlobalBankingNetwork } from './components/GlobalBankingNetwork';
 
-import { LanguageSelector } from './components/LanguageSelector';
+import { GlobalPreferencesModal } from './components/GlobalPreferencesModal';
 
 import { getFinancialAnalysis } from './services/geminiService';
 import { 
@@ -187,7 +187,7 @@ export const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile>(USER_PROFILE);
 
   const [verificationLevel, setVerificationLevel] = useState<VerificationLevel>(VerificationLevel.LEVEL_1);
-  const [isLanguageSelectorOpen, setIsLanguageSelectorOpen] = useState(false);
+  const [isGlobalPrefsOpen, setIsGlobalPrefsOpen] = useState(false);
 
   // Login & Session State
   const [loginState, setLoginState] = useState<'logged_out'|'intro'|'welcome'|'profile_signin'|'security_check'|'opening_sequence'|'logged_in'|'account_creation'>('intro');
@@ -581,7 +581,7 @@ export const App: React.FC = () => {
             onMarkNotificationsAsRead={onMarkNotificationsAsRead}
             onNotificationClick={setActiveView}
             userProfile={userProfile}
-            onOpenLanguageSelector={() => setIsLanguageSelectorOpen(true)}
+            onOpenLanguageSelector={() => setIsGlobalPrefsOpen(true)}
             onUpdateProfilePicture={onUpdateProfilePicture}
             onOpenSendMoneyFlow={(tab) => { setSendMoneyInitialTab(tab); setShowSendMoneyFlow(true); }}
             onOpenWireTransfer={() => setShowWireTransfer(true)}
@@ -669,7 +669,13 @@ export const App: React.FC = () => {
             />
         )}
 
-        {isLanguageSelectorOpen && <LanguageSelector onClose={() => setIsLanguageSelectorOpen(false)} />}
+        {isGlobalPrefsOpen && (
+            <GlobalPreferencesModal
+                onClose={() => setIsGlobalPrefsOpen(false)}
+                currentCurrency={displayCurrency}
+                setCurrency={setDisplayCurrency}
+            />
+        )}
         
         <DynamicIslandSimulator transaction={transactions.find(t => t.status === TransactionStatus.IN_TRANSIT || t.status === TransactionStatus.CONVERTING) || null} />
 

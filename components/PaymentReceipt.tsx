@@ -5,16 +5,16 @@ import { USER_PROFILE } from '../constants';
 import { LiveTransactionView } from './LiveTransactionView';
 import { 
     ArrowDownTrayIcon, 
-    ArrowPathIcon,
-    ClipboardDocumentIcon,
-    SpinnerIcon,
-    ICreditUnionLogo,
-    BuildingOfficeIcon,
-    PhoneIcon,
-    GlobeAmericasIcon,
-    UserCircleIcon,
-    ServerIcon,
-    LockClosedIcon,
+    ArrowPathIcon, 
+    ClipboardDocumentIcon, 
+    SpinnerIcon, 
+    ICreditUnionLogo, 
+    BuildingOfficeIcon, 
+    PhoneIcon, 
+    GlobeAmericasIcon, 
+    UserCircleIcon, 
+    ServerIcon, 
+    LockClosedIcon, 
     ShieldCheckIcon
 } from './Icons';
 import { AuthorizationWarningModal } from './AuthorizationWarningModal';
@@ -94,7 +94,7 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
             { status: TransactionStatus.FUNDS_ARRIVED, delay: 12000, log: "CORE: Beneficiary account credited. Settlement Finalized. SUCCESS." }
         ];
 
-        const timeouts: NodeJS.Timeout[] = [];
+        const timeouts: ReturnType<typeof setTimeout>[] = [];
 
         timeline.forEach(({ status, delay, log }) => {
             const t = setTimeout(() => {

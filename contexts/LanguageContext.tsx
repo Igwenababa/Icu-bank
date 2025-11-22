@@ -4,7 +4,8 @@ import { en } from '../locales/en';
 import { es } from '../locales/es';
 import { fr } from '../locales/fr';
 
-type Language = 'en' | 'es' | 'fr';
+// Allow generic string for broader language support in the UI, even if we only have 3 translation files
+type Language = string;
 
 interface LanguageContextType {
   language: Language;
@@ -14,7 +15,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations: Record<Language, Record<string, string>> = {
+const translations: Record<string, Record<string, string>> = {
   en,
   es,
   fr

@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUpIcon, ArrowsRightLeftIcon, SpinnerIcon } from './Icons.tsx';
 import { EXCHANGE_RATES } from '../constants.ts';
+import { CurrencyConverter } from './CurrencyConverter.tsx';
 
 const marketIndices = [
     { name: 'S&P 500', value: '5,487.03', change: '+21.43', percentChange: '+0.39%', positive: true },
@@ -105,22 +107,6 @@ const KeyRates: React.FC = () => {
 export const Investments: React.FC = () => {
     const baseCurrency = 'USD';
     const rates = Object.entries(EXCHANGE_RATES).filter(([currency]) => currency !== baseCurrency);
-    const [refreshCountdown, setRefreshCountdown] = useState(30);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setRefreshCountdown(prev => {
-                if (prev <= 1) {
-                    // In a real app, you would re-fetch rates here.
-                    // For this demo, we just reset the timer.
-                    return 30;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
 
     return (
         <div className="space-y-8">
@@ -129,12 +115,18 @@ export const Investments: React.FC = () => {
                 <p className="text-md text-slate-400 mt-1">Stay informed on global markets and foreign exchange rates.</p>
             </div>
             
-            <KeyRates />
-
-            <div>
-                <h3 className="text-xl font-bold text-slate-200 mb-4">Major Indices</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {marketIndices.map(index => <IndexCard key={index.name} {...index} />)}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                    <KeyRates />
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-200 mb-4">Major Indices</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            {marketIndices.map(index => <IndexCard key={index.name} {...index} />)}
+                        </div>
+                    </div>
+                </div>
+                <div className="lg:col-span-1">
+                    <CurrencyConverter />
                 </div>
             </div>
 

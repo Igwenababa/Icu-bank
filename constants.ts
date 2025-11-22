@@ -103,7 +103,28 @@ export const ALL_COUNTRIES: Country[] = [
     { code: 'KH', name: 'Cambodia', currency: 'KHR', symbol: '៛' },
     { code: 'LA', name: 'Laos', currency: 'LAK', symbol: '₭' },
     { code: 'MM', name: 'Myanmar', currency: 'MMK', symbol: 'K' },
-    // Add more countries as needed
+];
+
+export const EXTENDED_LANGUAGES = [
+    { code: 'en', name: 'English', nativeName: 'English', countryCode: 'US' },
+    { code: 'es', name: 'Spanish', nativeName: 'Español', countryCode: 'ES' },
+    { code: 'fr', name: 'French', nativeName: 'Français', countryCode: 'FR' },
+    { code: 'de', name: 'German', nativeName: 'Deutsch', countryCode: 'DE' },
+    { code: 'it', name: 'Italian', nativeName: 'Italiano', countryCode: 'IT' },
+    { code: 'pt', name: 'Portuguese', nativeName: 'Português', countryCode: 'PT' },
+    { code: 'zh', name: 'Chinese', nativeName: '中文', countryCode: 'CN' },
+    { code: 'ja', name: 'Japanese', nativeName: '日本語', countryCode: 'JP' },
+    { code: 'ko', name: 'Korean', nativeName: '한국어', countryCode: 'KR' },
+    { code: 'ru', name: 'Russian', nativeName: 'Русский', countryCode: 'RU' },
+    { code: 'ar', name: 'Arabic', nativeName: 'العربية', countryCode: 'SA' },
+    { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', countryCode: 'IN' },
+    { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', countryCode: 'TR' },
+    { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', countryCode: 'NL' },
+    { code: 'sv', name: 'Swedish', nativeName: 'Svenska', countryCode: 'SE' },
+    { code: 'pl', name: 'Polish', nativeName: 'Polski', countryCode: 'PL' },
+    { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt', countryCode: 'VN' },
+    { code: 'th', name: 'Thai', nativeName: 'ไทย', countryCode: 'TH' },
+    { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia', countryCode: 'ID' },
 ];
 
 export const COUNTRY_CALLING_CODES: { [countryCode: string]: string } = {
@@ -629,6 +650,19 @@ export const EXCHANGE_RATES: { [key: string]: number } = {
     SGD: 1.35,
     HKD: 7.81,
     NZD: 1.62,
+    // Adding more for comprehensive feel
+    TRY: 32.15,
+    SAR: 3.75,
+    AED: 3.67,
+    PLN: 3.98,
+    SEK: 10.55,
+    NOK: 10.68,
+    DKK: 6.88,
+    IDR: 16100,
+    THB: 36.50,
+    VND: 25450,
+    PHP: 57.20,
+    EGP: 47.50,
 };
 
 export const INITIAL_ADVANCED_TRANSFER_LIMITS: AdvancedTransferLimits = {
