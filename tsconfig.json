@@ -22,8 +22,9 @@
   "exclude": [
     "node_modules", 
     "dist",
-    "components/components/tasks.tsx",
-    "SendMoneyFlow.tsx",
-    "components/components/Footer.tsx"
+    "components/tasks.tsx",
+    "components/Tasks.tsx",
+    "components/components/Footer.tsx",
+    "SendMoneyFlow.tsx"
   ]
 }
