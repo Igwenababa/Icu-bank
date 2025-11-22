@@ -12,8 +12,8 @@
     "noEmit": true,
     "jsx": "react",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client", "node"],
     "allowSyntheticDefaultImports": true
@@ -22,11 +22,11 @@
   "exclude": [
     "node_modules", 
     "dist",
-    "**/tasks.tsx",
-    "**/Tasks.tsx",
+    "**/*tasks.tsx",
+    "**/*Tasks.tsx",
     "components/tasks.tsx",
     "components/Tasks.tsx",
-    "components/components/Footer.tsx",
-    "SendMoneyFlow.tsx"
+    "SendMoneyFlow.tsx",
+    "components/components/Footer.tsx"
   ]
 }

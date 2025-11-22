@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Header } from './components/Header.tsx';
-import { Dashboard } from './components/Dashboard.tsx';
-import { SendMoneyFlow } from './components/SendMoneyFlow.tsx';
-import { Recipients } from './components/Recipients.tsx';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Header } from './components/Header';
+import { Dashboard } from './components/Dashboard';
+import { SendMoneyFlow } from './components/SendMoneyFlow';
+import { Recipients } from './components/Recipients';
 import { 
     Transaction, 
     Recipient, 
@@ -37,14 +37,14 @@ import {
     VirtualCard, 
     Donation, 
     PrivacySettings, 
-    Country, 
     AdvancedTransferLimits, 
     TaskCategory, 
     SpendingLimit, 
     SpendingCategory,
     AccountType,
-    AdvisorResponse
-} from './types.ts';
+    AdvisorResponse,
+    Country
+} from './types';
 import { 
     INITIAL_RECIPIENTS, 
     INITIAL_TRANSACTIONS, 
@@ -72,64 +72,64 @@ import {
     INITIAL_PUSH_SETTINGS, 
     INITIAL_VIRTUAL_CARDS, 
     INITIAL_WALLET_DETAILS 
-} from './constants.ts';
-import * as Icons from './components/Icons.tsx';
-import { Welcome } from './components/Welcome.tsx';
-import { ActivityLog } from './components/ActivityLog.tsx';
-import { Security } from './components/Security.tsx';
-import { CardManagement } from './components/CardManagement.tsx';
-import { Insurance } from './components/Insurance.tsx';
-import { Loans } from './components/Loans.tsx';
-import { Support } from './components/Support.tsx';
-import { DynamicIslandSimulator } from './components/DynamicIslandSimulator.tsx';
-import { Accounts } from './components/Accounts.tsx';
-import { CryptoDashboard } from './components/CryptoDashboard.tsx';
-import { ServicesDashboard } from './components/ServicesDashboard.tsx';
-import { TravelCheckIn } from './components/TravelCheckIn.tsx';
-import { PlatformFeatures } from './components/PlatformFeatures.tsx';
-import { FinancialTasks } from './components/FinancialTasks.tsx';
-import { Flights } from './components/Flights.tsx';
-import { Utilities } from './components/Utilities.tsx';
-import { Integrations } from './components/Integrations.tsx';
-import { FinancialAdvisor } from './components/FinancialAdvisor.tsx';
-import { Investments } from './components/Investments.tsx';
-import { AtmLocator } from './components/AtmLocator.tsx';
-import { Quickteller } from './components/Quickteller.tsx';
-import { QrScanner } from './components/QrScanner.tsx';
-import { PrivacyCenter } from './components/PrivacyCenter.tsx';
-import { WireTransfer } from './components/WireTransfer.tsx';
-import { About } from './components/About.tsx';
-import { Contact } from './components/Contact.tsx';
-import { DigitalWallet } from './components/DigitalWallet.tsx';
-import { Ratings } from './components/Ratings.tsx';
-import { GlobalAid } from './components/GlobalAid.tsx';
-import { GlobalBankingNetwork } from './components/GlobalBankingNetwork.tsx';
+} from './constants';
+import * as Icons from './components/Icons';
+import { Welcome } from './components/Welcome';
+import { ActivityLog } from './components/ActivityLog';
+import { Security } from './components/Security';
+import { CardManagement } from './components/CardManagement';
+import { Insurance } from './components/Insurance';
+import { Loans } from './components/Loans';
+import { Support } from './components/Support';
+import { DynamicIslandSimulator } from './components/DynamicIslandSimulator';
+import { Accounts } from './components/Accounts';
+import { CryptoDashboard } from './components/CryptoDashboard';
+import { ServicesDashboard } from './components/ServicesDashboard';
+import { TravelCheckIn } from './components/TravelCheckIn';
+import { PlatformFeatures } from './components/PlatformFeatures';
+import { FinancialTasks } from './components/FinancialTasks';
+import { Flights } from './components/Flights';
+import { Utilities } from './components/Utilities';
+import { Integrations } from './components/Integrations';
+import { FinancialAdvisor } from './components/FinancialAdvisor';
+import { Investments } from './components/Investments';
+import { AtmLocator } from './components/AtmLocator';
+import { Quickteller } from './components/Quickteller';
+import { QrScanner } from './components/QrScanner';
+import { PrivacyCenter } from './components/PrivacyCenter';
+import { WireTransfer } from './components/WireTransfer';
+import { About } from './components/About';
+import { Contact } from './components/Contact';
+import { DigitalWallet } from './components/DigitalWallet';
+import { Ratings } from './components/Ratings';
+import { GlobalAid } from './components/GlobalAid';
+import { GlobalBankingNetwork } from './components/GlobalBankingNetwork';
 
-import { LanguageSelector } from './components/LanguageSelector.tsx';
+import { LanguageSelector } from './components/LanguageSelector';
 
-import { getFinancialAnalysis } from './services/geminiService.ts';
+import { getFinancialAnalysis } from './services/geminiService';
 import { 
     sendTransactionalEmail, 
     sendSmsNotification, 
     generateTransactionReceiptEmail, 
     generateTransactionReceiptSms 
-} from './services/notificationService.ts';
+} from './services/notificationService';
 
-import { InactivityModal } from './components/InactivityModal.tsx';
-import { ChangePasswordModal } from './components/ChangePasswordModal.tsx';
-import { PushNotificationToast } from './components/PushNotificationToast.tsx';
-import { AdvancedFirstPage } from './components/AdvancedFirstPage.tsx';
-import { OpeningSequence } from './components/OpeningSequence.tsx';
-import { PostLoginSecurityCheck } from './components/PostLoginSecurityCheck.tsx';
-import { AccountCreationFlow } from './components/AccountCreationFlow.tsx';
-import { ResumeSessionModal } from './components/ResumeSessionModal.tsx';
-import { ContactSupportModal } from './components/ContactSupportModal.tsx';
-import { LinkBankAccountModal } from './components/LinkBankAccountModal.tsx';
-import { LogoutConfirmationModal } from './components/LogoutConfirmationModal.tsx';
-import { LoggedOut } from './components/LoggedOut.tsx';
-import { ProfileSignIn } from './components/ProfileSignIn.tsx';
-import { Footer } from './components/Footer.tsx';
-import { LegalModal } from './components/LegalModal.tsx';
+import { InactivityModal } from './components/InactivityModal';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
+import { PushNotificationToast } from './components/PushNotificationToast';
+import { AdvancedFirstPage } from './components/AdvancedFirstPage';
+import { OpeningSequence } from './components/OpeningSequence';
+import { PostLoginSecurityCheck } from './components/PostLoginSecurityCheck';
+import { AccountCreationFlow } from './components/AccountCreationFlow';
+import { ResumeSessionModal } from './components/ResumeSessionModal';
+import { ContactSupportModal } from './components/ContactSupportModal';
+import { LinkBankAccountModal } from './components/LinkBankAccountModal';
+import { LogoutConfirmationModal } from './components/LogoutConfirmationModal';
+import { LoggedOut } from './components/LoggedOut';
+import { ProfileSignIn } from './components/ProfileSignIn';
+import { Footer } from './components/Footer';
+import { LegalModal } from './components/LegalModal';
 
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('dashboard');
@@ -231,7 +231,6 @@ export const App: React.FC = () => {
     };
     setNotifications(prev => [newNotification, ...prev]);
 
-    // Also trigger a push notification simulation
     if ((type === NotificationType.TRANSACTION && pushNotificationSettings.transactions) ||
         (type === NotificationType.SECURITY && pushNotificationSettings.security)) {
         setPushNotification({ id: `push_${Date.now()}`, type, title, message });
@@ -286,7 +285,6 @@ export const App: React.FC = () => {
       return true;
   };
 
-  // Handlers for settings/etc
   const onMarkNotificationsAsRead = () => setNotifications(prev => prev.map(n => ({...n, read: true})));
   const onUpdateSecuritySettings = (newSettings: Partial<SecuritySettings>) => setSecuritySettings(prev => ({ ...prev, ...newSettings }));
   const onUpdatePrivacySettings = (update: Partial<PrivacySettings>) => setPrivacySettings(prev => ({...prev, ...update}));
@@ -343,7 +341,8 @@ export const App: React.FC = () => {
           cvc: '123',
           spentThisMonth: 0,
           lockedToMerchant: null,
-          isFrozen: false
+          isFrozen: false,
+          linkedCardId: 'card_1',
       };
       setVirtualCards(prev => [...prev, newVC]);
   };

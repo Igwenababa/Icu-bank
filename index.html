@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -206,126 +207,18 @@
         border-color: #d9534f;
       }
     </style>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: {
-                DEFAULT: 'rgb(var(--color-primary-500) / <alpha-value>)',
-                '50': 'rgb(var(--color-primary-50) / <alpha-value>)',
-                '100': 'rgb(var(--color-primary-100) / <alpha-value>)',
-                '200': 'rgb(var(--color-primary-200) / <alpha-value>)',
-                '300': 'rgb(var(--color-primary-300) / <alpha-value>)',
-                '400': 'rgb(var(--color-primary-400) / <alpha-value>)',
-                '500': 'rgb(var(--color-primary-500) / <alpha-value>)',
-                '600': 'rgb(var(--color-primary-600) / <alpha-value>)',
-                '700': 'rgb(var(--color-primary-700) / <alpha-value>)',
-                '800': 'rgb(var(--color-primary-800) / <alpha-value>)',
-                '900': 'rgb(var(--color-primary-900) / <alpha-value>)',
-              },
-            },
-            boxShadow: {
-              'digital-light': '7px 7px 14px #d1d9e6, -7px -7px 14px #ffffff',
-              'digital-light-inset': 'inset 7px 7px 14px #d1d9e6, inset -7px -7px 14px #ffffff',
-              'digital-dark': '7px 7px 14px #1b2030, -7px -7px 14px #29304a',
-              'digital-dark-inset': 'inset 7px 7px 14px #1b2030, inset -7px -7px 14px #29304a',
-            },
-            animation: {
-              'pop-in': 'pop-in 0.4s ease-out forwards',
-              'flag-pop': 'flag-pop 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
-              'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-              'background-pan': 'background-pan 25s ease-in-out infinite',
-              'background-zoom': 'background-zoom 30s ease-in-out infinite',
-              'text-focus-in': 'text-focus-in 1s cubic-bezier(0.550, 0.085, 0.680, 0.530) forwards',
-              'breathing': 'breathing 4s ease-in-out infinite',
-              'slide-in-down': 'slide-in-down 0.3s ease-out forwards',
-              'slide-out-up': 'slide-out-up 0.3s ease-in forwards',
-              'ken-burns': 'ken-burns 40s ease-in-out infinite',
-              'breathing-dot': 'breathing-dot 2s ease-in-out infinite',
-              'grid-pan': 'grid-pan 40s linear infinite',
-              'card-zoom': 'card-background-zoom 40s ease-in-out infinite',
-            },
-            keyframes: {
-              'pop-in': {
-                '0%': { transform: 'scale(0.5)', opacity: '0' },
-                '100%': { transform: 'scale(1)', opacity: '1' },
-              },
-              'flag-pop': {
-                '0%': { transform: 'scale(0.3) rotate(-15deg)', opacity: '0' },
-                '50%': { transform: 'scale(1.1) rotate(5deg)', opacity: '1' },
-                '70%': { transform: 'scale(0.95) rotate(-2deg)', opacity: '1' },
-                '100%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
-              },
-              'fade-in-up': {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              'background-pan': {
-                  '0%': { backgroundPosition: '0% 50%' },
-                  '50%': { backgroundPosition: '100% 50%' },
-                  '100%': { backgroundPosition: '0% 50%' },
-              },
-              'background-zoom': {
-                  '0%': { backgroundPosition: 'center', backgroundSize: '100%' },
-                  '50%': { backgroundPosition: 'center', backgroundSize: '105%' },
-                  '100%': { backgroundPosition: 'center', backgroundSize: '100%' },
-              },
-              'text-focus-in': {
-                  '0%': { filter: 'blur(12px)', opacity: '0' },
-                  '100%': { filter: 'blur(0px)', opacity: '1' },
-              },
-              'breathing': {
-                '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 4px 6px rgba(0,82,255,0.15))' },
-                '50%': { transform: 'scale(1.03)', filter: 'drop-shadow(0 8px 12px rgba(0,82,255,0.2))' },
-              },
-              'slide-in-down': {
-                '0%': { opacity: '0', transform: 'translateY(-20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              'slide-out-up': {
-                '0%': { opacity: '1', transform: 'translateY(0)' },
-                '100%': { opacity: '0', transform: 'translateY(-20px)' },
-              },
-              'ken-burns': {
-                  '0%': { transform: 'scale(1.05) translate(0,0)' },
-                  '50%': { transform: 'scale(1.15) translate(2%, -2%)' },
-                  '100%': { transform: 'scale(1.05) translate(0,0)' },
-              },
-              'breathing-dot': {
-                '0%, 100%': {
-                    boxShadow: '0 0 3px 0.5px rgb(74 222 128 / 0.7)'
-                },
-                '50%': {
-                    boxShadow: '0 0 7px 2px rgb(74 222 128 / 0.7)'
-                }
-              },
-              'grid-pan': {
-                '0%': { backgroundPosition: '0 0' },
-                '100%': { backgroundPosition: '48px 48px' },
-              },
-              'card-background-zoom': {
-                '0%, 100%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.15)' },
-              },
-            }
-          }
-        }
-      }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="importmap">
 {
   "imports": {
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>

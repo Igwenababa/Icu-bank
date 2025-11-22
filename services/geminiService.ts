@@ -2,10 +2,25 @@ import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { NewsArticle, InsuranceProduct, LoanProduct, SystemUpdate, AccountType, VerificationLevel, AdvisorResponse, Cause } from '../types.ts';
 
 let ai: GoogleGenAI | undefined;
-if (process.env.API_KEY) {
-  ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// Safe access to process.env.API_KEY
+const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
+
+if (apiKey) {
+  ai = new GoogleGenAI({ apiKey });
 } else {
   console.warn("Gemini API key not found. AI features will be disabled.");
+}
+
+// Helper for exponential backoff retry
+async function retryOperation<T>(operation: () => Promise<T>, retries = 2, delay = 1000): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return retryOperation(operation, retries - 1, delay * 2);
+  }
 }
 
 export interface TranslationResult {
@@ -22,13 +37,13 @@ export const translateWithGemini = async (text: string, targetLanguage: string):
     }
     
     try {
-        const response = await ai.models.generateContent({
+        const response = await retryOperation<GenerateContentResponse>(() => ai!.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: `Translate the following text to ${targetLanguage}. Return only the translated text, without any additional formatting or explanations. Text to translate: "${text}"`,
-        });
+        }));
         return { translatedText: response.text?.trim() ?? '', isError: false };
     } catch (error) {
-        console.error(`Error translating text to ${targetLanguage}:`, error as any);
+        console.warn(`Error translating text to ${targetLanguage}:`, error);
         return { translatedText: `(Translation Error) ${text}`, isError: true };
     }
 };
@@ -55,9 +70,9 @@ export const getCountryBankingTip = async (countryName: string): Promise<Banking
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Generate a single, concise, and helpful banking tip for a user sending money to a bank account in ${countryName}. The tip should focus on a specific local requirement, a common mistake to avoid, or a best practice for that country. For example, for the UK, you might mention using a Sort Code. Frame the tip as direct advice.`,
+      contents: `Generate a single, concise, and helpful banking tip for a user sending money to a bank account in ${countryName}. The tip should focus on a specific local requirement, a common mistake to avoid, or a best practice for that country. Output JSON.`,
       config: {
         temperature: 0.2,
         responseMimeType: "application/json",
@@ -71,7 +86,7 @@ export const getCountryBankingTip = async (countryName: string): Promise<Banking
           }
         }
       }
-    });
+    }));
     
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -82,7 +97,7 @@ export const getCountryBankingTip = async (countryName: string): Promise<Banking
     tipCache.set(countryName, result);
     return result;
   } catch (error) {
-    console.error("Error fetching banking tip from Gemini:", error as any);
+    console.warn("Error fetching banking tip from Gemini:", error);
     const errorResult: BankingTipResult = { 
         tip: `Could not fetch banking tips at this time. Please ensure you have the correct details for ${countryName}.`, 
         isError: true 
@@ -117,9 +132,9 @@ export const getFinancialNews = async (): Promise<FinancialNewsResult> => {
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: "Generate 3 brief, synthetic financial news headlines and summaries relevant to international finance.",
+      contents: "Generate 3 brief, synthetic financial news headlines and summaries relevant to international finance. Output JSON.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -140,7 +155,7 @@ export const getFinancialNews = async (): Promise<FinancialNewsResult> => {
             }
         }
       }
-    });
+    }));
     
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -153,7 +168,7 @@ export const getFinancialNews = async (): Promise<FinancialNewsResult> => {
     return result;
 
   } catch (error) {
-    console.error("Error fetching financial news from Gemini:", error as any);
+    console.warn("Error fetching financial news from Gemini:", error);
     const errorResult = {
         articles: [ { title: 'AI News Feed Unavailable', summary: 'We are experiencing a temporary issue with our AI news service.', category: 'System Alert' } ],
         isError: true,
@@ -172,17 +187,19 @@ export const getInsuranceProductDetails = async (productName: string): Promise<{
   }
 
   if (!ai) {
-    const fallbackData: { [key: string]: InsuranceProduct } = { /* ... fallback data as before ... */ };
-    const product = fallbackData[productName] || null;
-    const result = { product, isError: !product };
-    if(product) insuranceCache.set(productName, result);
+    // Return a mock product immediately if AI is offline or fails
+    const mockDescription = `Comprehensive coverage for ${productName.toLowerCase()}.`;
+    const mockBenefits = ["Full protection", "24/7 Support", "Easy claims"];
+    const product: InsuranceProduct = { name: productName, description: mockDescription, benefits: mockBenefits };
+    const result = { product, isError: true }; 
+    insuranceCache.set(productName, result);
     return result;
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Generate a compelling marketing description and exactly 3 key benefits for a financial insurance product called "${productName}" offered by a fintech, iCredit Union®.`,
+      contents: `Generate a compelling marketing description and exactly 3 key benefits for a financial insurance product called "${productName}" offered by a fintech, iCredit Union®. Output JSON.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -193,7 +210,7 @@ export const getInsuranceProductDetails = async (productName: string): Promise<{
           }
         }
       }
-    });
+    }));
     
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -205,8 +222,11 @@ export const getInsuranceProductDetails = async (productName: string): Promise<{
     insuranceCache.set(productName, result);
     return result;
   } catch (error) {
-    console.error(`Error fetching insurance details for ${productName} from Gemini:`, error as any);
-    const errorResult = { product: null, isError: true };
+    console.warn(`Error fetching insurance details for ${productName} from Gemini:`, error);
+    const mockDescription = `Comprehensive coverage for ${productName.toLowerCase()}.`;
+    const mockBenefits = ["Full protection", "24/7 Support", "Easy claims"];
+    const product: InsuranceProduct = { name: productName, description: mockDescription, benefits: mockBenefits };
+    const errorResult = { product, isError: true };
     insuranceCache.set(productName, errorResult);
     return errorResult;
   }
@@ -218,9 +238,9 @@ export const getFinancialAnalysis = async (financialDataJSON: string): Promise<{
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Analyze the following financial data for a user and provide an overall summary, a financial score (0-100), a list of insights, and product recommendations. Data: ${financialDataJSON}`,
+      contents: `Analyze the following financial data for a user and provide an overall summary, a financial score (0-100), a list of insights, and product recommendations. Data: ${financialDataJSON}. Output JSON.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -254,7 +274,7 @@ export const getFinancialAnalysis = async (financialDataJSON: string): Promise<{
           },
         },
       },
-    });
+    }));
     
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -263,7 +283,7 @@ export const getFinancialAnalysis = async (financialDataJSON: string): Promise<{
     const parsedJson = JSON.parse(responseText.trim()) as AdvisorResponse;
     return { analysis: parsedJson, isError: false };
   } catch (error) {
-    console.error("Error fetching financial analysis from Gemini:", error as any);
+    console.warn("Error fetching financial analysis from Gemini:", error);
     return { analysis: null, isError: true };
   }
 };
@@ -279,9 +299,9 @@ export const getLoanProducts = async (): Promise<{ products: LoanProduct[], isEr
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: "Generate 3 synthetic and compelling loan products for a fintech called iCredit Union®. Include a unique id, name, description, 3 benefits, and min/max interest rates for each.",
+      contents: "Generate 3 synthetic and compelling loan products for a fintech called iCredit Union®. Include a unique id, name, description, 3 benefits, and min/max interest rates for each. Output JSON.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -309,7 +329,7 @@ export const getLoanProducts = async (): Promise<{ products: LoanProduct[], isEr
           }
         }
       }
-    });
+    }));
 
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -318,8 +338,13 @@ export const getLoanProducts = async (): Promise<{ products: LoanProduct[], isEr
     const parsedJson = JSON.parse(responseText.trim()) as { products: LoanProduct[] };
     return { products: parsedJson.products, isError: false };
   } catch (error) {
-    console.error("Error fetching loan products from Gemini:", error as any);
-    return { products: [], isError: true };
+    console.warn("Error fetching loan products from Gemini:", error);
+    const fallbackProducts: LoanProduct[] = [
+        { id: 'loan1', name: 'Personal Loan', description: 'Flexible financing for life\'s big moments.', benefits: ['Fixed rates', 'No origination fees', 'Quick funding'], interestRate: { min: 7.99, max: 19.99 } },
+        { id: 'loan2', name: 'Auto Loan', description: 'Competitive rates for new and used vehicles.', benefits: ['Flexible terms up to 72 months', 'Pre-approval available', 'Easy online application'], interestRate: { min: 5.49, max: 12.49 } },
+        { id: 'loan3', name: 'Home Improvement Loan', description: 'Fund your next renovation project with a simple, fixed-rate loan.', benefits: ['Borrow up to $50,000', 'No home equity required', 'Fast decision process'], interestRate: { min: 6.99, max: 15.99 } },
+    ];
+    return { products: fallbackProducts, isError: true };
   }
 };
 
@@ -333,9 +358,9 @@ export const getSystemUpdates = async (): Promise<{ updates: SystemUpdate[], isE
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: "Generate 3 recent, synthetic system updates for iCredit Union®. Include id, title, date (YYYY-MM-DD), description, and category ('New Feature', 'Improvement', 'Maintenance').",
+      contents: "Generate 3 recent, synthetic system updates for iCredit Union®. Include id, title, date (YYYY-MM-DD), description, and category ('New Feature', 'Improvement', 'Maintenance'). Output JSON.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -357,7 +382,7 @@ export const getSystemUpdates = async (): Promise<{ updates: SystemUpdate[], isE
           }
         }
       }
-    });
+    }));
     
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -366,8 +391,12 @@ export const getSystemUpdates = async (): Promise<{ updates: SystemUpdate[], isE
     const parsedJson = JSON.parse(responseText.trim()) as { updates: SystemUpdate[] };
     return { updates: parsedJson.updates, isError: false };
   } catch (error) {
-    console.error("Error fetching system updates from Gemini:", error as any);
-    return { updates: [], isError: true };
+    console.warn("Error fetching system updates from Gemini:", error);
+    const fallback: SystemUpdate[] = [
+        { id: 'upd1', title: 'Scheduled Maintenance', date: new Date().toISOString(), description: 'System will be briefly unavailable for scheduled upgrades.', category: 'Maintenance' },
+        { id: 'upd2', title: 'New Feature: Virtual Cards', date: new Date(Date.now() - 86400000 * 5).toISOString(), description: 'You can now create virtual cards for secure online shopping.', category: 'New Feature' }
+    ];
+    return { updates: fallback, isError: true };
   }
 };
 
@@ -377,13 +406,13 @@ export const getSupportAnswer = async (query: string): Promise<{ answer: string,
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `You are a helpful support agent for iCredit Union®. Answer the following user query concisely and clearly. User query: "${query}"`,
       config: {
         temperature: 0.1,
       }
-    });
+    }));
     
     const answer = response.text;
     if (!answer || answer.trim() === '') {
@@ -391,7 +420,7 @@ export const getSupportAnswer = async (query: string): Promise<{ answer: string,
     }
     return { answer: answer.trim(), isError: false };
   } catch (error) {
-    console.error("Error fetching support answer from Gemini:", error as any);
+    console.warn("Error fetching support answer from Gemini:", error);
     return { answer: "Sorry, I was unable to process your request at this time.", isError: true };
   }
 };
@@ -402,9 +431,9 @@ export const getAccountPerks = async (accountType: AccountType, verificationLeve
     }
 
     try {
-        const response: GenerateContentResponse = await ai.models.generateContent({
+        const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: `Generate a list of exactly 2 compelling, synthetic "Advanced Security Perks" for a user with a "${accountType}" account and a verification level of "${verificationLevel}".`,
+            contents: `Generate a list of exactly 2 compelling, synthetic "Advanced Security Perks" for a user with a "${accountType}" account and a verification level of "${verificationLevel}". Output JSON.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -418,7 +447,7 @@ export const getAccountPerks = async (accountType: AccountType, verificationLeve
                     }
                 }
             }
-        });
+        }));
 
         const responseText = response.text;
         if (!responseText || responseText.trim() === '') {
@@ -427,8 +456,8 @@ export const getAccountPerks = async (accountType: AccountType, verificationLeve
         const parsedJson = JSON.parse(responseText.trim()) as { perks: string[] };
         return { perks: parsedJson.perks, isError: false };
     } catch (error) {
-        console.error("Error fetching account perks from Gemini:", error as any);
-        return { perks: [], isError: true };
+        console.warn("Error fetching account perks from Gemini:", error);
+        return { perks: ["Enhanced fraud monitoring.", "Priority customer support."], isError: true };
     }
 };
 
@@ -438,9 +467,9 @@ export const getCauseDetails = async (causeTitle: string): Promise<{ details: Ca
   }
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await retryOperation(() => ai!.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `For a charity cause titled "${causeTitle}", generate a slightly more detailed one-sentence description and a list of 2 specific, compelling impacts of a donation.`,
+      contents: `For a charity cause titled "${causeTitle}", generate a slightly more detailed one-sentence description and a list of 2 specific, compelling impacts of a donation. Output JSON.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -451,7 +480,7 @@ export const getCauseDetails = async (causeTitle: string): Promise<{ details: Ca
           }
         }
       }
-    });
+    }));
     
     const responseText = response.text;
     if (!responseText || responseText.trim() === '') {
@@ -460,7 +489,7 @@ export const getCauseDetails = async (causeTitle: string): Promise<{ details: Ca
     const parsedJson = JSON.parse(responseText.trim()) as { description: string; impacts: string[] };
     return { details: parsedJson, isError: false };
   } catch (error) {
-    console.error(`Error fetching cause details for ${causeTitle} from Gemini:`, error as any);
-    return { details: null, isError: true };
+    console.warn(`Error fetching cause details for ${causeTitle} from Gemini:`, error);
+    return { details: { description: 'Provides essential aid.', impacts: ['Impact 1', 'Impact 2'] }, isError: true };
   }
 };

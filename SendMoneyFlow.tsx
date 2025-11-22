@@ -1,1 +1,2 @@
-// Deprecated. See components/SendMoneyFlow.tsx
+// @ts-nocheck
+export {};

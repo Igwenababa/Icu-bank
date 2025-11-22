@@ -1,26 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
-import { Transaction, Account, TransactionStatus } from '../types.ts';
-import { USER_PROFILE } from '../constants.ts';
-import { LiveTransactionView } from './LiveTransactionView.tsx';
+import React, { useState, useEffect, useRef } from 'react';
+import { Transaction, Account, TransactionStatus } from '../types';
+import { USER_PROFILE } from '../constants';
+import { LiveTransactionView } from './LiveTransactionView';
 import { 
-    CheckCircleIcon, 
     ArrowDownTrayIcon, 
     ArrowPathIcon,
     ClipboardDocumentIcon,
     SpinnerIcon,
     ICreditUnionLogo,
-    ShieldCheckIcon,
-    LockClosedIcon,
     BuildingOfficeIcon,
-    MapPinIcon,
     PhoneIcon,
-    ClockIcon,
     GlobeAmericasIcon,
-    UserCircleIcon
-} from './Icons.tsx';
-import { AuthorizationWarningModal } from './AuthorizationWarningModal.tsx';
-import { timeSince } from '../utils/time.ts';
+    UserCircleIcon,
+    ServerIcon,
+    LockClosedIcon,
+    ShieldCheckIcon
+} from './Icons';
+import { AuthorizationWarningModal } from './AuthorizationWarningModal';
 
 declare const html2canvas: any;
 declare const jspdf: any;
@@ -44,32 +41,100 @@ const DetailRow: React.FC<{ label: string; value: React.ReactNode; subValue?: st
     </div>
 );
 
+const LiveLog: React.FC<{ logs: string[] }> = ({ logs }) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [logs]);
+
+    return (
+        <div className="mt-6 bg-black/40 rounded-lg border border-slate-700/50 p-3 font-mono text-[10px] h-32 overflow-y-auto custom-scrollbar" ref={scrollRef}>
+            {logs.length === 0 && <span className="text-slate-600 animate-pulse">Initializing secure stream...</span>}
+            {logs.map((log, i) => (
+                <div key={i} className="mb-1 flex gap-2">
+                    <span className="text-slate-500">[{new Date().toLocaleTimeString([], {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'})}]</span>
+                    <span className={log.includes('SUCCESS') ? 'text-green-400' : log.includes('WARN') ? 'text-yellow-400' : 'text-blue-300'}>
+                        {log}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sourceAccount, onStartOver, onViewActivity, onAuthorizeTransaction, phone, onContactSupport, accounts }) => {
-    const totalDebited = transaction.sendAmount + transaction.fee;
-    const isCompleted = transaction.status === TransactionStatus.FUNDS_ARRIVED;
+    // Local state to simulate live progression
+    const [liveTx, setLiveTx] = useState<Transaction>(transaction);
+    const [logs, setLogs] = useState<string[]>([]);
+    
     const [showAuthWarning, setShowAuthWarning] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [showStamp, setShowStamp] = useState(false);
 
+    // Simulation Logic
     useEffect(() => {
-        if (transaction.status === TransactionStatus.IN_TRANSIT) {
-             const timer = setTimeout(() => {
-                setShowAuthWarning(true);
-            }, 2000);
-            return () => clearTimeout(timer);
-        } else {
-            setShowAuthWarning(false);
+        // Only simulate if we started at SUBMITTED
+        if (transaction.status !== TransactionStatus.SUBMITTED) {
+            // If loaded from history as complete, show stamp immediately
+            if (transaction.status === TransactionStatus.FUNDS_ARRIVED) setShowStamp(true);
+            return;
         }
-    }, [transaction.status]);
 
-    useEffect(() => {
-        setTimeout(() => setShowStamp(true), 800);
+        const timeline = [
+            { status: TransactionStatus.SUBMITTED, delay: 500, log: "SEC: Encrypted payment packet generated (AES-256)." },
+            { status: TransactionStatus.SUBMITTED, delay: 1500, log: "NET: Handshake established with Global Settlement Network." },
+            { status: TransactionStatus.CONVERTING, delay: 3000, log: `FX: Locking spot rate at ${transaction.exchangeRate.toFixed(4)}... SUCCESS.` },
+            { status: TransactionStatus.CONVERTING, delay: 4500, log: "FX: Liquidity provider acknowledgement received." },
+            { status: TransactionStatus.IN_TRANSIT, delay: 6500, log: "SWIFT: MT103 Message Dispatched. Ref: IMAD-2024..." },
+            { status: TransactionStatus.IN_TRANSIT, delay: 8000, log: "AML: Tier 1 Compliance Check... PASSED." },
+            { status: TransactionStatus.IN_TRANSIT, delay: 9500, log: "NET: Reaching beneficiary bank gateway..." },
+            { status: TransactionStatus.FUNDS_ARRIVED, delay: 12000, log: "CORE: Beneficiary account credited. Settlement Finalized. SUCCESS." }
+        ];
+
+        const timeouts: NodeJS.Timeout[] = [];
+
+        timeline.forEach(({ status, delay, log }) => {
+            const t = setTimeout(() => {
+                setLiveTx(prev => ({
+                    ...prev,
+                    status: status,
+                    statusTimestamps: {
+                        ...prev.statusTimestamps,
+                        [status]: new Date()
+                    }
+                }));
+                setLogs(prev => [...prev, log]);
+                
+                if (status === TransactionStatus.FUNDS_ARRIVED && log.includes('SUCCESS')) {
+                    setShowStamp(true);
+                    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+                }
+            }, delay);
+            timeouts.push(t);
+        });
+
+        return () => timeouts.forEach(clearTimeout);
     }, []);
+
+    const totalDebited = liveTx.sendAmount + liveTx.fee;
+    const isCompleted = liveTx.status === TransactionStatus.FUNDS_ARRIVED;
+    const submissionDate = liveTx.statusTimestamps[TransactionStatus.SUBMITTED] || new Date();
+    const valueDate = new Date(submissionDate);
+    
+    const formattedDate = submissionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+    const formattedTime = submissionDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' });
+
+    const trn = liveTx.id.toUpperCase().replace('TXN_', 'TRN');
+    const imad = `IMAD-${Math.random().toString(36).substring(2, 10).toUpperCase()}-${new Date().getFullYear()}`;
+    const digitalSignature = `SIG-RSA-4096-${Math.random().toString(36).substring(2, 18).toUpperCase()}`;
 
     const handleDownloadReceipt = () => {
         setIsGeneratingPdf(true);
         setTimeout(() => {
-            const receiptElement = document.getElementById(`receipt-capture-${transaction.id}`);
+            const receiptElement = document.getElementById(`receipt-capture-${liveTx.id}`);
             if (receiptElement && typeof html2canvas !== 'undefined' && typeof jspdf !== 'undefined') {
                 html2canvas(receiptElement, { scale: 2, backgroundColor: '#0f172a' }).then((canvas: any) => {
                     const imgData = canvas.toDataURL('image/png');
@@ -79,32 +144,20 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                         format: [canvas.width, canvas.height]
                     });
                     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-                    pdf.save(`iCU_Transaction_${transaction.id}.pdf`);
+                    pdf.save(`iCU_Transaction_${liveTx.id}.pdf`);
                     setIsGeneratingPdf(false);
                 });
             } else {
-                console.error('Could not generate PDF.');
                 setIsGeneratingPdf(false);
             }
         }, 100);
     };
 
-    const submissionDate = transaction.statusTimestamps[TransactionStatus.SUBMITTED] || new Date();
-    const valueDate = new Date(submissionDate); // Typically same day for internal, +1/2 for wire
-    
-    const formattedDate = submissionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
-    const formattedTime = submissionDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' });
-
-    // Generate realistic reference codes
-    const trn = transaction.id.toUpperCase().replace('TXN_', 'TRN');
-    const imad = `IMAD-${Math.random().toString(36).substring(2, 10).toUpperCase()}-${new Date().getFullYear()}`;
-    const digitalSignature = `SIG-RSA-4096-${Math.random().toString(36).substring(2, 18).toUpperCase()}`;
-
     return (
         <>
             {showAuthWarning && (
                 <AuthorizationWarningModal
-                    transaction={transaction}
+                    transaction={liveTx}
                     onAuthorize={onAuthorizeTransaction}
                     onClose={() => setShowAuthWarning(false)}
                     onContactSupport={onContactSupport}
@@ -118,17 +171,17 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
 
             <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto pb-12 animate-fade-in-up">
                 
-                {/* Tracker outside the printable receipt */}
+                {/* Live Tracker */}
                 <div className="w-full mb-8 px-4">
-                    <LiveTransactionView transaction={transaction} phone={phone} />
+                    <LiveTransactionView transaction={liveTx} phone={phone} />
                 </div>
 
                 {/* THE RECEIPT CARD (Print Target) */}
                 <div 
-                    id={`receipt-capture-${transaction.id}`}
+                    id={`receipt-capture-${liveTx.id}`}
                     className="relative w-full bg-[#0f172a] border border-slate-700 rounded-none sm:rounded-lg shadow-2xl overflow-hidden text-slate-200 font-sans"
                 >
-                    {/* Watermark Background */}
+                    {/* Watermark */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none overflow-hidden">
                         <ICreditUnionLogo />
                     </div>
@@ -136,7 +189,7 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                     {/* Holographic Security Strip */}
                     <div className="absolute top-0 bottom-0 left-8 w-1 bg-gradient-to-b from-yellow-500 via-yellow-200 to-yellow-600 opacity-60 z-20 hidden sm:block"></div>
 
-                    {/* Header Section */}
+                    {/* Header */}
                     <div className="relative bg-slate-900 p-8 border-b border-slate-700">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div className="flex items-center gap-4 pl-0 sm:pl-6">
@@ -145,7 +198,7 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                                 </div>
                                 <div>
                                     <h1 className="text-2xl font-bold text-white tracking-tight">iCredit Union®</h1>
-                                    <p className="text--[10px] uppercase tracking-widest text-slate-400 font-semibold">Global Treasury Services</p>
+                                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Global Treasury Services</p>
                                 </div>
                             </div>
                             <div className="text-left sm:text-right">
@@ -163,22 +216,20 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                         </div>
                     </div>
 
-                    {/* Main Body */}
+                    {/* Body */}
                     <div className="p-8 pl-4 sm:pl-14 relative">
                         
-                        {/* Realistic Stamp */}
-                        {isCompleted && (
-                            <div className={`absolute top-12 right-12 z-30 pointer-events-none transition-all duration-700 ease-out mix-blend-screen ${showStamp ? 'opacity-80 scale-100 rotate-[-15deg]' : 'opacity-0 scale-150 rotate-[-30deg]'}`}>
-                                <div className="w-36 h-36 border-[6px] border-green-500 rounded-full flex items-center justify-center p-2 opacity-70" style={{ maskImage: 'url(https://www.transparenttextures.com/patterns/grunge-wall.png)' }}>
-                                    <div className="w-full h-full border-[2px] border-green-500 rounded-full flex flex-col items-center justify-center text-green-500 uppercase font-black text-center leading-none">
-                                        <span className="text-xs tracking-widest mb-1">iCredit Union</span>
-                                        <span className="text-2xl tracking-tighter">FUNDS</span>
-                                        <span className="text-2xl tracking-tighter">CLEARED</span>
-                                        <span className="text-[10px] font-mono mt-1">{formattedDate}</span>
-                                    </div>
+                        {/* Verified Stamp */}
+                        <div className={`absolute top-12 right-12 z-30 pointer-events-none transition-all duration-700 ease-out mix-blend-screen ${showStamp ? 'opacity-80 scale-100 rotate-[-15deg]' : 'opacity-0 scale-150 rotate-[-30deg]'}`}>
+                            <div className="w-36 h-36 border-[6px] border-green-500 rounded-full flex items-center justify-center p-2 opacity-70" style={{ maskImage: 'url(https://www.transparenttextures.com/patterns/grunge-wall.png)' }}>
+                                <div className="w-full h-full border-[2px] border-green-500 rounded-full flex flex-col items-center justify-center text-green-500 uppercase font-black text-center leading-none">
+                                    <span className="text-xs tracking-widest mb-1">iCredit Union</span>
+                                    <span className="text-2xl tracking-tighter">FUNDS</span>
+                                    <span className="text-2xl tracking-tighter">CLEARED</span>
+                                    <span className="text-[10px] font-mono mt-1">{formattedDate}</span>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         {/* Transaction Meta Data */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
@@ -194,16 +245,16 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                             <div>
                                 <p className="text-[10px] uppercase text-slate-500 font-bold">Status</p>
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                    <span className={`text-sm font-bold ${isCompleted ? 'text-green-400' : 'text-yellow-400'}`}>
-                                        {isCompleted ? 'COMPLETED' : 'PROCESSING'}
+                                    <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-green-500' : 'bg-blue-500 animate-pulse'}`}></div>
+                                    <span className={`text-sm font-bold ${isCompleted ? 'text-green-400' : 'text-blue-400'}`}>
+                                        {liveTx.status.toUpperCase()}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                            {/* Originator / Sender */}
+                            {/* Sender */}
                             <div>
                                 <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 border-b border-primary/30 pb-2 flex items-center gap-2">
                                     <UserCircleIcon className="w-4 h-4" /> Originator (Sender)
@@ -212,8 +263,7 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                                     <p className="text-lg font-bold text-white">{USER_PROFILE.name}</p>
                                     <div className="text-sm text-slate-400 space-y-0.5">
                                         <p>3797 Yorkshire Circle</p>
-                                        <p>Greenville, NC 27834</p>
-                                        <p>United States</p>
+                                        <p>Greenville, NC 27834, USA</p>
                                         <div className="flex items-center gap-2 mt-1">
                                             <PhoneIcon className="w-3 h-3" /> {USER_PROFILE.phone}
                                         </div>
@@ -221,32 +271,30 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                                     <div className="mt-4 pt-3 border-t border-slate-800">
                                         <DetailRow label="Bank Name" value="iCredit Union®" />
                                         <DetailRow label="Account Number" value={sourceAccount.fullAccountNumber || sourceAccount.accountNumber} isMono />
-                                        <DetailRow label="Account Type" value={sourceAccount.type} />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Beneficiary / Recipient */}
+                            {/* Recipient */}
                             <div>
                                 <h3 className="text-xs font-bold text-green-500 uppercase tracking-widest mb-4 border-b border-green-500/30 pb-2 flex items-center gap-2">
                                     <ArrowDownTrayIcon className="w-4 h-4" /> Beneficiary (Recipient)
                                 </h3>
                                 <div className="space-y-1">
-                                    <p className="text-lg font-bold text-white">{transaction.recipient.fullName}</p>
+                                    <p className="text-lg font-bold text-white">{liveTx.recipient.fullName}</p>
                                     <div className="text-sm text-slate-400 space-y-0.5">
-                                        <p>{transaction.recipient.streetAddress || '123 Recipient Lane'}</p>
-                                        <p>{transaction.recipient.city}, {transaction.recipient.stateProvince} {transaction.recipient.postalCode}</p>
-                                        <p>{transaction.recipient.country.name}</p>
-                                        {transaction.recipient.phone && (
+                                        <p>{liveTx.recipient.streetAddress || '123 Recipient Lane'}</p>
+                                        <p>{liveTx.recipient.city}, {liveTx.recipient.country.name}</p>
+                                        {liveTx.recipient.phone && (
                                             <div className="flex items-center gap-2 mt-1">
-                                                <PhoneIcon className="w-3 h-3" /> {transaction.recipient.phone}
+                                                <PhoneIcon className="w-3 h-3" /> {liveTx.recipient.phone}
                                             </div>
                                         )}
                                     </div>
                                     <div className="mt-4 pt-3 border-t border-slate-800">
-                                        <DetailRow label="Bank Name" value={transaction.recipient.bankName} />
-                                        <DetailRow label="Account Number / IBAN" value={transaction.recipient.realDetails.accountNumber} isMono />
-                                        <DetailRow label="SWIFT / BIC" value={transaction.recipient.realDetails.swiftBic} isMono />
+                                        <DetailRow label="Bank Name" value={liveTx.recipient.bankName} />
+                                        <DetailRow label="Account Number" value={liveTx.recipient.realDetails.accountNumber} isMono />
+                                        <DetailRow label="SWIFT / BIC" value={liveTx.recipient.realDetails.swiftBic} isMono />
                                     </div>
                                 </div>
                             </div>
@@ -260,15 +308,15 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-400">Principal Amount</span>
-                                            <span className="text-white font-mono">{transaction.sendAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
+                                            <span className="text-white font-mono">{liveTx.sendAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-400">Network Fee</span>
-                                            <span className="text-white font-mono">{transaction.fee.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
+                                            <span className="text-white font-mono">{liveTx.fee.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-400">Exchange Rate</span>
-                                            <span className="text-white font-mono">{transaction.exchangeRate.toFixed(4)}</span>
+                                            <span className="text-white font-mono">{liveTx.exchangeRate.toFixed(4)}</span>
                                         </div>
                                     </div>
                                     <div className="border-t sm:border-t-0 sm:border-l border-slate-700 pt-4 sm:pt-0 sm:pl-8 flex flex-col justify-center">
@@ -278,11 +326,19 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                                         </div>
                                         <div className="flex justify-between items-baseline">
                                             <span className="text-sm font-bold text-green-400 uppercase">Beneficiary Receives</span>
-                                            <span className="text-xl font-bold text-green-400 font-mono">{transaction.receiveAmount.toLocaleString('en-US', { style: 'currency', currency: transaction.receiveCurrency })}</span>
+                                            <span className="text-xl font-bold text-green-400 font-mono">{liveTx.receiveAmount.toLocaleString('en-US', { style: 'currency', currency: liveTx.receiveCurrency })}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Live Settlement Log */}
+                        <div className="mt-8">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <ServerIcon className="w-3 h-3" /> Live Settlement Log
+                            </h3>
+                            <LiveLog logs={logs} />
                         </div>
 
                         {/* Footer Codes */}
@@ -292,11 +348,11 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ transaction, sou
                                 <p>Digital Signature: <span className="text-slate-600 break-all">{digitalSignature}</span></p>
                                 <p className="mt-2 text-slate-600 font-sans max-w-md">
                                     This is an electronically generated receipt from iCredit Union Global Settlement Network. 
-                                    It does not require a physical signature. Validated via 256-bit SSL Encryption.
+                                    Validated via 256-bit SSL Encryption.
                                 </p>
                             </div>
                             <div className="mt-4 sm:mt-0 text-right">
-                                <img src={`https://quickchart.io/qr?text=iCredit-Receipt-${transaction.id}-${imad}&size=120&format=svg`} alt="QR" className="w-20 h-20 ml-auto opacity-80 bg-white p-1 rounded" />
+                                <img src={`https://quickchart.io/qr?text=iCredit-Receipt-${liveTx.id}-${imad}&size=120&format=svg`} alt="QR" className="w-20 h-20 ml-auto opacity-80 bg-white p-1 rounded" />
                                 <p className="mt-1">Scan to Verify</p>
                             </div>
                         </div>

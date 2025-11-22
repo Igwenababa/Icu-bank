@@ -38,8 +38,8 @@ const SecurityModule: React.FC<{
     const [internalStatus, setInternalStatus] = useState<'pending' | 'scanning' | 'verified'>('pending');
 
     useEffect(() => {
-        let scanTimer: number;
-        let verifyTimer: number;
+        let scanTimer: ReturnType<typeof setTimeout>;
+        let verifyTimer: ReturnType<typeof setTimeout>;
 
         const startTimer = setTimeout(() => {
             setInternalStatus('scanning');

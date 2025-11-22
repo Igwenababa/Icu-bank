@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-// FIX: The `LiveSession` type is not an exported member of the SDK. It has been removed.
 import { GoogleGenAI, LiveServerMessage, Modality, FunctionDeclaration, Type, Blob, Chat } from "@google/genai";
 import { Account, AccountType, Transaction, Recipient } from '../types.ts';
 import { useLanguage } from '../contexts/LanguageContext.tsx';
@@ -101,7 +100,6 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
     const [chatLanguage] = useState(appLanguage);
 
     const chatSessionRef = useRef<Chat | null>(null);
-    // FIX: Using `any` as `LiveSession` is not an exported type from the SDK.
     const sessionPromiseRef = useRef<Promise<any> | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
@@ -156,7 +154,6 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
 
         try {
             if (!chatSessionRef.current) {
-                 // Fallback simulation if no API key
                  setTimeout(() => {
                      setTranscripts(prev => [...prev, { role: 'model', text: "I am currently in demo mode because no API Key was provided. Please add an API Key to enable my AI features." }]);
                      setIsProcessingText(false);
@@ -174,7 +171,6 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                         functionResponse: { name: fc.name, response: { result } }
                     });
                 }
-                // FIX: The `sendMessage` method expects a `message` property, not `parts`.
                 response = await chatSessionRef.current.sendMessage({ message: functionResponses as any });
             }
 
@@ -264,7 +260,8 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                         }
                     }
 
-                    const audioData = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+                    // FIX: Safely access optional chain
+                    const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
                     if (audioData) {
                         setLiveStatus('speaking');
                         const outputContext = outputAudioContextRef.current!;
@@ -288,7 +285,6 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
         });
     }, [chatLanguage, onInitiateTransfer, accounts, transactions, transcripts]);
 
-    // --- Transcript Helpers ---
     const lastUserTranscriptIndex = useRef(-1);
     const lastModelTranscriptIndex = useRef(-1);
     const updateLastTranscript = (prev: Transcript[], role: 'user' | 'model', textChunk: string) => {
@@ -308,7 +304,6 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
         lastModelTranscriptIndex.current = -1;
     };
     
-    // --- Main Control Logic ---
     useEffect(() => {
         if (isOpen && mode === 'text') {
             const ai = getAi();
@@ -318,18 +313,15 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                 return;
             }
 
-            // History must be an even number of turns and not end with a user turn.
             let historyToPass = [...transcripts];
             if (historyToPass.length > 0 && historyToPass[historyToPass.length - 1].role === 'user') {
                 historyToPass = historyToPass.slice(0, -1);
             }
-            // Ensure we start with a user turn if history exists
             const firstUserTurnIndex = historyToPass.findIndex(t => t.role === 'user');
             const validHistory = firstUserTurnIndex !== -1 ? historyToPass.slice(firstUserTurnIndex) : [];
 
             const formattedHistory = validHistory.map(t => ({ role: t.role as 'user' | 'model', parts: [{ text: t.text }] }));
             
-            // FIX: The `createChat` method requires a `model` property.
             chatSessionRef.current = ai.chats.create({
                 model: 'gemini-2.5-flash',
                 history: formattedHistory,
@@ -339,12 +331,10 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
                 }
             });
             
-            // If the chat is just opening (no history), set the initial greeting message.
             if (transcripts.length === 0) {
                 setTranscripts([{ role: 'model', text: t('chat_initial_message') }]);
             }
         } else if (!isOpen) {
-            // Cleanup when the entire component is closed
             stopVoiceSession();
             chatSessionRef.current = null;
             setTranscripts([]);
@@ -357,13 +347,11 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
     const toggleMode = () => {
         if (mode === 'text') {
             setMode('voice');
-            chatSessionRef.current = null; // Clear text session
+            chatSessionRef.current = null;
             startVoiceSession();
         } else {
             setMode('text');
             stopVoiceSession();
-            // The useEffect will now run because `mode` changed to 'text',
-            // and it will initialize the text chat session.
         }
     };
 
