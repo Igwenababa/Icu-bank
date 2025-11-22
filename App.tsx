@@ -1,17 +1,78 @@
 
-// FIX: Import `useRef` from React to resolve 'Cannot find name' errors.
-// FIX: Import `useMemo` from React to resolve 'useMemo is not defined' error.
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Header } from './components/Header.tsx';
 import { Dashboard } from './components/Dashboard.tsx';
-// FIX: Update import to be explicit with '.tsx' extension to resolve module ambiguity.
-// FIX: Changed import to remove extension to potentially resolve casing conflict reported by TS.
 import { SendMoneyFlow } from './components/SendMoneyFlow.tsx';
 import { Recipients } from './components/Recipients.tsx';
-// FIX: Added 'AdvancedTransferLimits' to fix "Cannot find name 'AdvancedTransferLimits'" error.
-import { Transaction, Recipient, TransactionStatus, Card, CardTransaction, Notification, NotificationType, LoanApplication, LoanApplicationStatus, Account, VerificationLevel, CryptoHolding, CryptoAsset, SubscriptionService, AppleCardDetails, AppleCardTransaction, TravelPlan, TravelPlanStatus, SecuritySettings, TrustedDevice, UserProfile, PlatformSettings, View, Task, FlightBooking, UtilityBill, UtilityBiller, AdvisorResponse, BalanceDisplayMode, AccountType, AirtimePurchase, PushNotification, PushNotificationSettings, SavedSession, VirtualCard, Donation, PrivacySettings, Country, AdvancedTransferLimits, TaskCategory, SpendingLimit, SpendingCategory } from './types.ts';
-// FIX: Added 'ALL_COUNTRIES' to imports to resolve "Cannot find name" error.
-import { INITIAL_RECIPIENTS, INITIAL_TRANSACTIONS, INITIAL_CARDS, INITIAL_CARD_TRANSACTIONS, INITIAL_ADVANCED_TRANSFER_LIMITS, INITIAL_ACCOUNTS, getInitialCryptoAssets, INITIAL_CRYPTO_HOLDINGS, CRYPTO_TRADE_FEE_PERCENT, INITIAL_SUBSCRIPTIONS, INITIAL_APPLE_CARD_DETAILS, INITIAL_APPLE_CARD_TRANSACTIONS, INITIAL_TRAVEL_PLANS, INITIAL_SECURITY_SETTINGS, INITIAL_TRUSTED_DEVICES, USER_PROFILE, INITIAL_PLATFORM_SETTINGS, THEME_COLORS, INITIAL_TASKS, INITIAL_FLIGHT_BOOKINGS, INITIAL_UTILITY_BILLS, getUtilityBillers, getAirtimeProviders, INITIAL_AIRTIME_PURCHASES, INITIAL_PUSH_SETTINGS, EXCHANGE_RATES, NEW_USER_PROFILE_TEMPLATE, NEW_USER_ACCOUNTS_TEMPLATE, INITIAL_VIRTUAL_CARDS, DOMESTIC_WIRE_FEE, INTERNATIONAL_WIRE_FEE, INITIAL_WALLET_DETAILS, ALL_COUNTRIES } from './constants.ts';
+import { 
+    Transaction, 
+    Recipient, 
+    TransactionStatus, 
+    Card, 
+    CardTransaction, 
+    Notification, 
+    NotificationType, 
+    LoanApplication, 
+    LoanApplicationStatus, 
+    Account, 
+    VerificationLevel, 
+    CryptoHolding, 
+    SubscriptionService, 
+    AppleCardDetails, 
+    AppleCardTransaction, 
+    TravelPlan, 
+    TravelPlanStatus, 
+    SecuritySettings, 
+    TrustedDevice, 
+    UserProfile, 
+    PlatformSettings, 
+    View, 
+    Task, 
+    FlightBooking, 
+    UtilityBill, 
+    AirtimePurchase, 
+    PushNotification, 
+    PushNotificationSettings, 
+    SavedSession, 
+    VirtualCard, 
+    Donation, 
+    PrivacySettings, 
+    Country, 
+    AdvancedTransferLimits, 
+    TaskCategory, 
+    SpendingLimit, 
+    SpendingCategory,
+    AccountType,
+    AdvisorResponse
+} from './types.ts';
+import { 
+    INITIAL_RECIPIENTS, 
+    INITIAL_TRANSACTIONS, 
+    INITIAL_CARDS, 
+    INITIAL_CARD_TRANSACTIONS, 
+    INITIAL_ADVANCED_TRANSFER_LIMITS, 
+    INITIAL_ACCOUNTS, 
+    getInitialCryptoAssets, 
+    INITIAL_CRYPTO_HOLDINGS, 
+    CRYPTO_TRADE_FEE_PERCENT, 
+    INITIAL_SUBSCRIPTIONS, 
+    INITIAL_APPLE_CARD_DETAILS, 
+    INITIAL_APPLE_CARD_TRANSACTIONS, 
+    INITIAL_TRAVEL_PLANS, 
+    INITIAL_SECURITY_SETTINGS, 
+    INITIAL_TRUSTED_DEVICES, 
+    USER_PROFILE, 
+    INITIAL_PLATFORM_SETTINGS, 
+    INITIAL_TASKS, 
+    INITIAL_FLIGHT_BOOKINGS, 
+    INITIAL_UTILITY_BILLS, 
+    getUtilityBillers, 
+    getAirtimeProviders, 
+    INITIAL_AIRTIME_PURCHASES, 
+    INITIAL_PUSH_SETTINGS, 
+    INITIAL_VIRTUAL_CARDS, 
+    INITIAL_WALLET_DETAILS 
+} from './constants.ts';
 import * as Icons from './components/Icons.tsx';
 import { Welcome } from './components/Welcome.tsx';
 import { ActivityLog } from './components/ActivityLog.tsx';
@@ -26,7 +87,6 @@ import { CryptoDashboard } from './components/CryptoDashboard.tsx';
 import { ServicesDashboard } from './components/ServicesDashboard.tsx';
 import { TravelCheckIn } from './components/TravelCheckIn.tsx';
 import { PlatformFeatures } from './components/PlatformFeatures.tsx';
-// FIX: Updated import to use FinancialTasks.tsx to resolve casing conflict and module resolution error.
 import { FinancialTasks } from './components/FinancialTasks.tsx';
 import { Flights } from './components/Flights.tsx';
 import { Utilities } from './components/Utilities.tsx';
@@ -34,7 +94,6 @@ import { Integrations } from './components/Integrations.tsx';
 import { FinancialAdvisor } from './components/FinancialAdvisor.tsx';
 import { Investments } from './components/Investments.tsx';
 import { AtmLocator } from './components/AtmLocator.tsx';
-// FIX: Import Quickteller to resolve "Cannot find name 'Quickteller'" error.
 import { Quickteller } from './components/Quickteller.tsx';
 import { QrScanner } from './components/QrScanner.tsx';
 import { PrivacyCenter } from './components/PrivacyCenter.tsx';
@@ -46,11 +105,15 @@ import { Ratings } from './components/Ratings.tsx';
 import { GlobalAid } from './components/GlobalAid.tsx';
 import { GlobalBankingNetwork } from './components/GlobalBankingNetwork.tsx';
 
-import { useLanguage, LanguageProvider } from './contexts/LanguageContext.tsx';
 import { LanguageSelector } from './components/LanguageSelector.tsx';
 
 import { getFinancialAnalysis } from './services/geminiService.ts';
-import { sendPushNotification, sendTransactionalEmail, sendSmsNotification, generateTransactionReceiptEmail, generateTransactionReceiptSms, generateCardStatusEmail, generateFundsArrivedEmail, generateLoginAlertEmail, generateLoginAlertSms, generateNewAccountOtpEmail, generateNewAccountOtpSms, generateFullWelcomeEmail, generateFullWelcomeSms, generateWelcomeEmail, generateWelcomeSms, generateDepositConfirmationEmail, generateDepositConfirmationSms, generateTaskReminderEmail, generateTaskReminderSms, generateSupportTicketConfirmationEmail, generateSupportTicketConfirmationSms } from './services/notificationService.ts';
+import { 
+    sendTransactionalEmail, 
+    sendSmsNotification, 
+    generateTransactionReceiptEmail, 
+    generateTransactionReceiptSms 
+} from './services/notificationService.ts';
 
 import { InactivityModal } from './components/InactivityModal.tsx';
 import { ChangePasswordModal } from './components/ChangePasswordModal.tsx';
@@ -68,10 +131,6 @@ import { ProfileSignIn } from './components/ProfileSignIn.tsx';
 import { Footer } from './components/Footer.tsx';
 import { LegalModal } from './components/LegalModal.tsx';
 
-const INACTIVITY_TIMEOUT = 300 * 1000; // 5 minutes
-const COUNTDOWN_START = 60; // 60 seconds
-
-// FIX: Change `export default` to a named export `export const App` to resolve the module resolution error.
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('dashboard');
   const [showSendMoneyFlow, setShowSendMoneyFlow] = useState(false);
@@ -88,7 +147,7 @@ export const App: React.FC = () => {
   
   const [cards, setCards] = useState<Card[]>(INITIAL_CARDS);
   const [virtualCards, setVirtualCards] = useState<VirtualCard[]>(INITIAL_VIRTUAL_CARDS);
-  const [cardTransactions, setCardTransactions] = useState<CardTransaction[]>(INITIAL_CARD_TRANSACTIONS);
+  const [cardTransactions] = useState<CardTransaction[]>(INITIAL_CARD_TRANSACTIONS);
 
   const [loanApplications, setLoanApplications] = useState<LoanApplication[]>([]);
   
@@ -107,7 +166,7 @@ export const App: React.FC = () => {
   const [airtimePurchases, setAirtimePurchases] = useState<AirtimePurchase[]>(INITIAL_AIRTIME_PURCHASES);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [linkedServices, setLinkedServices] = useState<Record<string, string>>({ PayPal: 'randy.m.c@...com' });
-  const [walletDetails, setWalletDetails] = useState(INITIAL_WALLET_DETAILS);
+  const [walletDetails] = useState(INITIAL_WALLET_DETAILS);
 
   // Notifications
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -293,7 +352,7 @@ export const App: React.FC = () => {
       setVirtualCards(prev => prev.map(vc => vc.id === cardId ? {...vc, ...updates} : vc));
   };
 
-  const onAddFunds = async (amount: number, lastFour: string, network: 'Visa' | 'Mastercard') => {
+  const onAddFunds = async (amount: number, lastFour: string) => {
       const checking = accounts.find(a => a.type === AccountType.CHECKING);
       if(checking) {
           setAccounts(prev => prev.map(a => a.id === checking.id ? {...a, balance: a.balance + amount} : a));
@@ -474,6 +533,10 @@ export const App: React.FC = () => {
           return tx;
       }));
   };
+  
+  const openLegalModal = (title: string, content: string) => {
+      setLegalModalContent({ title, content });
+  };
 
   if (loginState === 'intro') {
       return <AdvancedFirstPage onComplete={() => setLoginState('welcome')} onOpenAccount={() => setLoginState('account_creation')} />;
@@ -610,6 +673,12 @@ export const App: React.FC = () => {
         {isLanguageSelectorOpen && <LanguageSelector onClose={() => setIsLanguageSelectorOpen(false)} />}
         
         <DynamicIslandSimulator transaction={transactions.find(t => t.status === TransactionStatus.IN_TRANSIT || t.status === TransactionStatus.CONVERTING) || null} />
+
+        <Footer 
+            setActiveView={setActiveView}
+            onOpenSendMoneyFlow={(tab) => { setSendMoneyInitialTab(tab); setShowSendMoneyFlow(true); }}
+            openLegalModal={openLegalModal}
+        />
     </div>
   );
 };

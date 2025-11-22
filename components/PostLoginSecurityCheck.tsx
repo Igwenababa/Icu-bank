@@ -7,8 +7,7 @@ import {
     DevicePhoneMobileIcon, 
     CheckCircleIcon, 
     SpinnerIcon,
-    ServerIcon,
-    WifiIcon
+    ServerIcon
 } from './Icons';
 
 interface PostLoginSecurityCheckProps {
@@ -35,7 +34,7 @@ const SecurityModule: React.FC<{
     label: string; 
     status: 'pending' | 'scanning' | 'verified'; 
     delay: number 
-}> = ({ icon, label, status, delay }) => {
+}> = ({ icon, label, delay }) => {
     const [internalStatus, setInternalStatus] = useState<'pending' | 'scanning' | 'verified'>('pending');
 
     useEffect(() => {

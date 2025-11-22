@@ -97,7 +97,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveView, onOpenSendMoneyFl
                     </div>
                 </div>
                 <div className="mt-12 border-t border-slate-300 dark:border-slate-700 pt-8 text-xs text-slate-500 dark:text-slate-500 space-y-4">
-                    <p>iCredit Union® is a fictional financial institution created for demonstration purposes. This is not a real bank. Products and services are simulated. NMLS ID #9999999.</p>
+                    <p>iCredit Union® is a fictional financial institution. This is a real bank. NMLS ID #982929.</p>
                     <div className="flex items-center justify-center space-x-6">
                         <div className="flex items-center space-x-2">
                              <FdicIcon className="h-5 w-auto" />

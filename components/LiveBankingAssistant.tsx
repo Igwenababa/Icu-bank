@@ -97,8 +97,8 @@ export const LiveBankingAssistant: React.FC<LiveBankingAssistantProps> = ({ acco
     const [textInput, setTextInput] = useState('');
     const [isProcessingText, setIsProcessingText] = useState(false);
     
-    const { language: appLanguage, setLanguage: setAppLanguage, t } = useLanguage();
-    const [chatLanguage, setChatLanguage] = useState(appLanguage);
+    const { language: appLanguage, t } = useLanguage();
+    const [chatLanguage] = useState(appLanguage);
 
     const chatSessionRef = useRef<Chat | null>(null);
     // FIX: Using `any` as `LiveSession` is not an exported type from the SDK.
