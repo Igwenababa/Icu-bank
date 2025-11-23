@@ -19,6 +19,7 @@ import {
     ServerIcon
 } from './Icons.tsx';
 import { LEGAL_CONTENT } from '../constants.ts';
+import { useLanguage } from '../contexts/LanguageContext.tsx';
 
 interface FooterProps {
     setActiveView: (view: View) => void;
@@ -80,6 +81,7 @@ const SystemStatus = () => (
 
 export const Footer: React.FC<FooterProps> = ({ setActiveView, onOpenSendMoneyFlow, openLegalModal }) => {
     const [region, setRegion] = useState('Global (English)');
+    const { t } = useLanguage();
 
     return (
         <footer className="relative bg-slate-950 text-slate-300 font-sans overflow-hidden border-t border-white/5">
@@ -153,43 +155,43 @@ export const Footer: React.FC<FooterProps> = ({ setActiveView, onOpenSendMoneyFl
 
                     {/* Col 2: Private Banking */}
                     <div>
-                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">Private Banking</h4>
+                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">{t('footer_private_banking')}</h4>
                         <ul className="space-y-3">
-                            <FooterLink onClick={() => setActiveView('accounts')}>Global Accounts</FooterLink>
-                            <FooterLink onClick={() => setActiveView('cards')}>Metal Cards</FooterLink>
-                            <FooterLink onClick={() => setActiveView('invest')}>Wealth Management</FooterLink>
-                            <FooterLink onClick={() => setActiveView('crypto')}>Digital Assets</FooterLink>
-                            <FooterLink onClick={() => setActiveView('loans')}>Lending Solutions</FooterLink>
+                            <FooterLink onClick={() => setActiveView('accounts')}>{t('header_title_accounts')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('cards')}>{t('header_title_cards')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('invest')}>{t('header_title_invest')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('crypto')}>{t('header_title_crypto')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('loans')}>{t('header_title_loans')}</FooterLink>
                         </ul>
                     </div>
 
                     {/* Col 3: Services */}
                     <div>
-                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">Services</h4>
+                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">{t('footer_services')}</h4>
                         <ul className="space-y-3">
-                            <FooterLink onClick={() => onOpenSendMoneyFlow('send')}>International Wire</FooterLink>
-                            <FooterLink onClick={() => setActiveView('flights')}>Concierge Travel</FooterLink>
-                            <FooterLink onClick={() => setActiveView('insurance')}>Asset Protection</FooterLink>
-                            <FooterLink onClick={() => setActiveView('checkin')}>Travel Mode</FooterLink>
-                            <FooterLink onClick={() => setActiveView('globalAid')}>Philanthropy</FooterLink>
+                            <FooterLink onClick={() => onOpenSendMoneyFlow('send')}>{t('quick_actions_send_money')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('flights')}>{t('header_title_flights')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('insurance')}>{t('header_title_insurance')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('checkin')}>{t('header_title_checkin')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('globalAid')}>{t('header_title_globalAid')}</FooterLink>
                         </ul>
                     </div>
 
                     {/* Col 4: Support & Corp */}
                     <div>
-                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">Governance</h4>
+                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">{t('footer_governance')}</h4>
                         <ul className="space-y-3">
-                            <FooterLink onClick={() => setActiveView('about')}>Investor Relations</FooterLink>
-                            <FooterLink onClick={() => setActiveView('support')}>24/7 Support</FooterLink>
-                            <FooterLink onClick={() => setActiveView('security')}>Security Center</FooterLink>
+                            <FooterLink onClick={() => setActiveView('about')}>{t('header_title_about')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('support')}>{t('header_title_support')}</FooterLink>
+                            <FooterLink onClick={() => setActiveView('security')}>{t('header_title_security')}</FooterLink>
                             <FooterLink onClick={() => openLegalModal('Careers', LEGAL_CONTENT.CAREERS_INFO)}>Careers</FooterLink>
-                            <FooterLink onClick={() => setActiveView('contact')}>Contact Us</FooterLink>
+                            <FooterLink onClick={() => setActiveView('contact')}>{t('header_title_contact')}</FooterLink>
                         </ul>
                     </div>
 
                     {/* Col 5: Contact (Visual) */}
                     <div>
-                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">Contact</h4>
+                        <h4 className="font-bold text-white text-xs uppercase tracking-widest mb-6 border-b border-white/10 pb-2 inline-block">{t('footer_contact')}</h4>
                         <ul className="space-y-4 text-sm text-slate-400">
                             <li className="flex items-start gap-3">
                                 <MapPinIcon className="w-5 h-5 text-primary-500 flex-shrink-0" />
@@ -247,7 +249,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveView, onOpenSendMoneyFl
                             Rates for lending products are subject to change without notice and are based on creditworthiness.
                         </p>
                         <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 pt-4 font-semibold uppercase tracking-wider">
-                            <button onClick={() => setActiveView('privacy')} className="hover:text-white transition-colors">Privacy Policy</button>
+                            <button onClick={() => setActiveView('privacy')} className="hover:text-white transition-colors">{t('header_title_privacy')}</button>
                             <button onClick={() => openLegalModal('Terms of Use', LEGAL_CONTENT.TERMS_OF_USE)} className="hover:text-white transition-colors">Terms of Use</button>
                             <button onClick={() => openLegalModal('Cookie Policy', LEGAL_CONTENT.COOKIE_POLICY)} className="hover:text-white transition-colors">Cookies</button>
                             <button onClick={() => openLegalModal('Accessibility', '<p>Accessibility statement...</p>')} className="hover:text-white transition-colors">Accessibility</button>

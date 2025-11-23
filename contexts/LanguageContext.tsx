@@ -22,7 +22,8 @@ const translations: Record<string, Record<string, string>> = {
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+  // Defaulting to Spanish as requested
+  const [language, setLanguage] = useState<Language>('es');
 
   const t = (key: string): string => {
     const translation = translations[language]?.[key];

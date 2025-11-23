@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Recipient, Transaction, Account, SecuritySettings, View, TransactionStatus, AccountType, UserProfile } from '../types.ts';
+import { Recipient, Transaction, Account, SecuritySettings, View, TransactionStatus, AccountType, UserProfile, PaymentMethodType } from '../types.ts';
 import { STANDARD_FEE, EXPRESS_FEE, EXCHANGE_RATES, TRANSFER_PURPOSES, USER_PIN, NETWORK_AUTH_CODE } from '../constants.ts';
-import { SpinnerIcon, CheckCircleIcon, ShieldCheckIcon, XIcon, NetworkIcon, UsersIcon, SendIcon, CameraIcon, CalendarDaysIcon, ArrowPathIcon, ExclamationTriangleIcon, GlobeAmericasIcon, LockClosedIcon, WalletIcon, ServerIcon, WifiIcon } from './Icons.tsx';
+import { SpinnerIcon, CheckCircleIcon, ShieldCheckIcon, XIcon, NetworkIcon, UsersIcon, SendIcon, CameraIcon, CalendarDaysIcon, ArrowPathIcon, ExclamationTriangleIcon, GlobeAmericasIcon, LockClosedIcon, WalletIcon, ServerIcon, WifiIcon, BankIcon, PayPalIcon, CashAppIcon, ZelleIcon, WesternUnionIcon, MoneyGramIcon } from './Icons.tsx';
 import { triggerHaptic } from '../utils/haptics.ts';
 import { PaymentReceipt } from './PaymentReceipt.tsx';
 import { CheckDepositFlow } from './CheckDepositFlow.tsx';
@@ -41,6 +41,15 @@ const FREQUENCIES = [
     { id: 'weekly', label: 'Weekly Standing Order' },
     { id: 'bi-weekly', label: 'Bi-Weekly Standing Order' },
     { id: 'monthly', label: 'Monthly Standing Order' },
+];
+
+const PAYMENT_METHODS: { id: PaymentMethodType; label: string; icon: React.ReactElement; placeholder: string }[] = [
+    { id: 'BANK', label: 'Bank Transfer', icon: <BankIcon className="w-5 h-5"/>, placeholder: '' },
+    { id: 'PAYPAL', label: 'PayPal', icon: <PayPalIcon className="w-5 h-5"/>, placeholder: 'Enter email or phone' },
+    { id: 'CASHAPP', label: 'Cash App', icon: <CashAppIcon className="w-5 h-5"/>, placeholder: 'Enter $Cashtag' },
+    { id: 'ZELLE', label: 'Zelle', icon: <ZelleIcon className="w-5 h-5"/>, placeholder: 'Enter email or phone' },
+    { id: 'WESTERN_UNION', label: 'Western Union', icon: <WesternUnionIcon className="w-5 h-5"/>, placeholder: 'Enter recipient name' },
+    { id: 'MONEYGRAM', label: 'MoneyGram', icon: <MoneyGramIcon className="w-5 h-5"/>, placeholder: 'Enter recipient name' },
 ];
 
 const NetworkHandshake: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -133,11 +142,13 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   
   // Form State (Single Send)
   const [sourceAccountId, setSourceAccountId] = useState<string>(() => (internalAccounts.length > 0 ? internalAccounts[0].id : ''));
-  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(recipients.length > 0 ? recipients[0] : null);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('BANK');
+  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
+  const [serviceIdentifier, setServiceIdentifier] = useState(''); // Holds email, cashtag, etc.
   const [sendAmount, setSendAmount] = useState('');
   const [purpose, setPurpose] = useState(TRANSFER_PURPOSES[0]);
   const [deliverySpeed, setDeliverySpeed] = useState<'Standard' | 'Express'>('Standard');
-  const [receiveCurrency, setReceiveCurrency] = useState<string>(selectedRecipient?.country.currency || 'GBP');
+  const [receiveCurrency, setReceiveCurrency] = useState<string>('USD');
   const [rateLockCountdown, setRateLockCountdown] = useState(60);
   const [liveRate, setLiveRate] = useState<number>(0);
   const [isFetchingRate, setIsFetchingRate] = useState(false);
@@ -211,7 +222,7 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
     return null;
   }, [numericSendAmount, totalCost, sourceAccount]);
   
-  const isDetailsInvalid = amountError !== null || numericSendAmount <= 0 || !selectedRecipient || !sourceAccount;
+  const isDetailsInvalid = amountError !== null || numericSendAmount <= 0 || (!selectedRecipient && !serviceIdentifier) || !sourceAccount;
 
   const liveTransaction = useMemo(() => {
     if (!createdTransaction) return null;
@@ -223,9 +234,18 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   }, [hapticsEnabled]);
 
   const handleNextStep = useCallback(() => {
+    if (selectedMethod === 'CASHAPP' && !serviceIdentifier.startsWith('$')) {
+        setError("Cashtag must start with '$'");
+        return;
+    }
+    if ((selectedMethod === 'PAYPAL' || selectedMethod === 'ZELLE') && !serviceIdentifier.includes('@') && !/^\d+$/.test(serviceIdentifier.replace(/[\s-]/g, ''))) {
+        setError("Please enter a valid email or phone number.");
+        return;
+    }
+    setError('');
     hapticTrigger();
     setStep(prev => prev + 1);
-  }, [hapticTrigger]);
+  }, [hapticTrigger, selectedMethod, serviceIdentifier]);
 
   const handlePrevStep = useCallback(() => {
     hapticTrigger();
@@ -245,6 +265,8 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   useEffect(() => {
     if (selectedRecipient) {
       setReceiveCurrency(selectedRecipient.country.currency);
+    } else {
+      setReceiveCurrency('USD');
     }
   }, [selectedRecipient]);
 
@@ -311,9 +333,24 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
         estimatedArrivalDate.setDate(estimatedArrivalDate.getDate() + 3);
     }
 
+    // Construct a temporary recipient object if one wasn't selected from the list
+    const recipientToUse: Recipient = selectedRecipient || {
+        id: `temp_${Date.now()}`,
+        fullName: serviceIdentifier || 'External User',
+        bankName: selectedMethod === 'BANK' ? 'Unknown Bank' : PAYMENT_METHODS.find(m => m.id === selectedMethod)?.label || 'Service',
+        accountNumber: 'N/A',
+        country: { code: 'US', name: 'United States', currency: 'USD', symbol: '$' }, // Default fallback
+        deliveryOptions: { bankDeposit: true, cardDeposit: true, cashPickup: false },
+        realDetails: { accountNumber: 'N/A', swiftBic: 'N/A' },
+        recipientType: selectedMethod === 'BANK' ? 'bank' : 'service',
+        serviceName: selectedMethod === 'BANK' ? undefined : PAYMENT_METHODS.find(m => m.id === selectedMethod)?.label,
+        paymentMethod: selectedMethod,
+        serviceIdentifier: serviceIdentifier
+    };
+
     const newTransaction = await createTransaction({
       accountId: sourceAccount!.id,
-      recipient: selectedRecipient!,
+      recipient: recipientToUse,
       sendAmount: numericSendAmount,
       receiveAmount: receiveAmount,
       receiveCurrency: receiveCurrency,
@@ -322,6 +359,8 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
       deliverySpeed: deliverySpeed,
       purpose: purpose,
       description: finalDescription,
+      transferMethod: selectedMethod === 'BANK' ? 'bank' : 'service',
+      paymentMethod: selectedMethod,
     });
 
     if (newTransaction) {
@@ -374,6 +413,9 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
       setError('');
       setFrequency('one-time');
       setScheduledDate('');
+      setServiceIdentifier('');
+      setSelectedMethod('BANK');
+      setSelectedRecipient(null);
       setConsents({ accuracy: false, auth: false, aml: false });
       setIsNetworkHandshakeActive(false);
   };
@@ -497,6 +539,23 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                 {amountError && <div className="absolute bottom-2 left-0 right-0 text-red-400 text-xs font-bold">{amountError}</div>}
                             </div>
 
+                            {/* Method Selector */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Payment Method</label>
+                                <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                    {PAYMENT_METHODS.map(method => (
+                                        <button
+                                            key={method.id}
+                                            onClick={() => { setSelectedMethod(method.id); setSelectedRecipient(null); setServiceIdentifier(''); }}
+                                            className={`flex-shrink-0 flex flex-col items-center justify-center p-3 rounded-xl border min-w-[90px] transition-all ${selectedMethod === method.id ? 'bg-primary/20 border-primary text-white shadow-digital-inset' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:border-white/20'}`}
+                                        >
+                                            <div className={`mb-2 ${selectedMethod === method.id ? 'text-primary' : 'text-slate-500'}`}>{method.icon}</div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">{method.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Source */}
                                 <div className="space-y-2">
@@ -514,22 +573,39 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                 {/* Recipient */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">To Beneficiary</label>
-                                    <button onClick={() => setIsRecipientSelectorOpen(true)} className="w-full flex items-center justify-between bg-slate-950/50 border border-white/10 text-white p-4 rounded-xl hover:bg-slate-900/80 transition-all group">
-                                        {selectedRecipient ? (
-                                            <div className="flex items-center gap-3 overflow-hidden">
-                                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                                                    {selectedRecipient.fullName.charAt(0)}
+                                    
+                                    {selectedMethod === 'BANK' ? (
+                                        <button onClick={() => setIsRecipientSelectorOpen(true)} className="w-full flex items-center justify-between bg-slate-950/50 border border-white/10 text-white p-4 rounded-xl hover:bg-slate-900/80 transition-all group h-[58px]">
+                                            {selectedRecipient ? (
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                                                        {selectedRecipient.fullName.charAt(0)}
+                                                    </div>
+                                                    <div className="text-left truncate">
+                                                        <p className="font-bold text-sm truncate">{selectedRecipient.nickname || selectedRecipient.fullName}</p>
+                                                        <p className="text-xs text-slate-400 truncate">{selectedRecipient.bankName}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-left truncate">
-                                                    <p className="font-bold text-sm truncate">{selectedRecipient.nickname || selectedRecipient.fullName}</p>
-                                                    <p className="text-xs text-slate-400 truncate">{selectedRecipient.bankName}</p>
-                                                </div>
+                                            ) : (
+                                                <span className="text-slate-500 font-medium">Select Bank Recipient</span>
+                                            )}
+                                            <ArrowPathIcon className="w-4 h-4 text-slate-500 transform -rotate-90 group-hover:text-primary transition-colors" />
+                                        </button>
+                                    ) : (
+                                        <div className="relative">
+                                            <input 
+                                                type="text" 
+                                                value={serviceIdentifier} 
+                                                onChange={(e) => setServiceIdentifier(e.target.value)} 
+                                                className="w-full bg-slate-950/50 border border-white/10 text-white p-4 pl-12 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-medium h-[58px]" 
+                                                placeholder={PAYMENT_METHODS.find(m => m.id === selectedMethod)?.placeholder}
+                                            />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                                                {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.icon}
                                             </div>
-                                        ) : (
-                                            <span className="text-slate-500 font-medium">Select Recipient</span>
-                                        )}
-                                        <ArrowPathIcon className="w-4 h-4 text-slate-500 transform -rotate-90 group-hover:text-primary transition-colors" />
-                                    </button>
+                                        </div>
+                                    )}
+                                    {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
                                 </div>
                             </div>
 
@@ -594,6 +670,17 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                 </div>
 
                                 <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">To</span>
+                                        <span className="font-semibold">{selectedRecipient ? selectedRecipient.fullName : serviceIdentifier}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Method</span>
+                                        <span className="font-semibold flex items-center gap-1">
+                                            {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.icon}
+                                            {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.label}
+                                        </span>
+                                    </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Principal Amount</span>
                                         <span className="font-semibold">{numericSendAmount.toLocaleString('en-US',{style:'currency', currency:'USD'})}</span>

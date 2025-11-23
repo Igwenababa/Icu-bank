@@ -1,3 +1,4 @@
+
 export const en: Record<string, string> = {
   "header_title_dashboard": "Dashboard",
   "header_title_accounts": "My Accounts",
@@ -49,5 +50,30 @@ export const en: Record<string, string> = {
   "chat_assistant_title": "Banking Assistant",
   "chat_placeholder": "Ask a question...",
   "chat_initial_message": "Hello! I am the iCredit Union® assistant. How can I help you today?",
-  "chat_language_select": "Chat Language"
+  "chat_language_select": "Chat Language",
+
+  // New Keys
+  "nav_banking": "Everyday Banking",
+  "nav_payments": "Global Payments",
+  "nav_wealth": "Wealth & Growth",
+  "nav_lifestyle": "Lifestyle Services",
+  "nav_support": "System & Support",
+  
+  "section_my_accounts": "My Accounts",
+  "section_quick_actions": "Quick Actions",
+  "section_recent_activity": "Recent Activity",
+  "section_market_insights": "Market Insights",
+  "action_manage_portfolio": "Manage Portfolio",
+  "action_view_details": "View Details",
+  "label_financial_health": "Fin. Health",
+  "label_available_balance": "Available Balance",
+  "label_secure_session": "Secure Session Active",
+  "label_travel_mode": "Travel Mode Active",
+  "status_excellent": "Excellent",
+  "status_active": "Active",
+  
+  "footer_private_banking": "Private Banking",
+  "footer_services": "Services",
+  "footer_governance": "Governance",
+  "footer_contact": "Contact"
 };

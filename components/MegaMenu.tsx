@@ -14,6 +14,7 @@ import {
     LogoutIcon
 } from './Icons.tsx';
 import { View, UserProfile } from '../types.ts';
+import { useLanguage } from '../contexts/LanguageContext.tsx';
 
 interface MegaMenuProps {
   isOpen: boolean;
@@ -38,71 +39,72 @@ const CATEGORY_IMAGES: Record<MenuCategory, string> = {
 
 const menuConfig: {
     id: MenuCategory;
-    title: string;
+    titleKey: string;
     items: {
         view: View;
-        label: string;
-        description: string;
+        labelKey: string;
+        description: string; // descriptions kept simple or hardcoded for now as full i18n for all descriptions is extensive
         icon: React.ComponentType<{ className?: string }>;
     }[];
 }[] = [
     {
         id: 'Banking',
-        title: 'Everyday Banking',
+        titleKey: 'nav_banking',
         items: [
-            { view: 'dashboard', label: 'Dashboard', description: "Portfolio overview.", icon: DashboardIcon },
-            { view: 'accounts', label: 'My Accounts', description: "Checking, Savings & Loans.", icon: WalletIcon },
-            { view: 'cards', label: 'Cards & Wallet', description: "Manage physical & virtual cards.", icon: CreditCardIcon },
-            { view: 'wallet', label: 'Digital Wallet', description: "Contactless payments.", icon: CreditCardIcon },
+            { view: 'dashboard', labelKey: 'header_title_dashboard', description: "Portfolio overview.", icon: DashboardIcon },
+            { view: 'accounts', labelKey: 'header_title_accounts', description: "Checking, Savings & Loans.", icon: WalletIcon },
+            { view: 'cards', labelKey: 'header_title_cards', description: "Manage physical & virtual cards.", icon: CreditCardIcon },
+            { view: 'wallet', labelKey: 'header_title_wallet', description: "Contactless payments.", icon: CreditCardIcon },
         ]
     },
     {
         id: 'Payments',
-        title: 'Global Payments',
+        titleKey: 'nav_payments',
         items: [
-            { view: 'send', label: 'Transfer Funds', description: "Domestic & P2P.", icon: SendIcon },
-            { view: 'wire', label: 'Wire Transfer', description: "SWIFT & IBAN networks.", icon: GlobeAmericasIcon },
-            { view: 'recipients', label: 'Beneficiaries', description: "Manage contacts.", icon: UserGroupIcon },
-            { view: 'history', label: 'Transaction Log', description: "Audit & history.", icon: ActivityIcon },
-            { view: 'integrations', label: 'Connected Apps', description: "PayPal, Zelle, etc.", icon: PuzzlePieceIcon },
+            { view: 'send', labelKey: 'header_title_send', description: "Domestic & P2P.", icon: SendIcon },
+            { view: 'wire', labelKey: 'quick_actions_send_money', description: "SWIFT & IBAN networks.", icon: GlobeAmericasIcon },
+            { view: 'recipients', labelKey: 'header_title_recipients', description: "Manage contacts.", icon: UserGroupIcon },
+            { view: 'history', labelKey: 'header_title_history', description: "Audit & history.", icon: ActivityIcon },
+            { view: 'integrations', labelKey: 'header_title_integrations', description: "PayPal, Zelle, etc.", icon: PuzzlePieceIcon },
         ]
     },
     {
         id: 'Wealth',
-        title: 'Wealth & Growth',
+        titleKey: 'nav_wealth',
         items: [
-            { view: 'invest', label: 'Investments', description: "Markets & Stocks.", icon: TrendingUpIcon },
-            { view: 'crypto', label: 'Digital Assets', description: "Crypto portfolio.", icon: ChartBarIcon },
-            { view: 'advisor', label: 'Private Advisor', description: "AI Financial insights.", icon: SparklesIcon },
-            { view: 'loans', label: 'Lending', description: "Personal & Business loans.", icon: CashIcon },
-            { view: 'insurance', label: 'Insurance', description: "Asset protection.", icon: LifebuoyIcon },
+            { view: 'invest', labelKey: 'header_title_invest', description: "Markets & Stocks.", icon: TrendingUpIcon },
+            { view: 'crypto', labelKey: 'header_title_crypto', description: "Crypto portfolio.", icon: ChartBarIcon },
+            { view: 'advisor', labelKey: 'header_title_advisor', description: "AI Financial insights.", icon: SparklesIcon },
+            { view: 'loans', labelKey: 'header_title_loans', description: "Personal & Business loans.", icon: CashIcon },
+            { view: 'insurance', labelKey: 'header_title_insurance', description: "Asset protection.", icon: LifebuoyIcon },
         ]
     },
     {
         id: 'Lifestyle',
-        title: 'Lifestyle Services',
+        titleKey: 'nav_lifestyle',
         items: [
-            { view: 'flights', label: 'Concierge Travel', description: "Book flights globally.", icon: AirplaneTicketIcon },
-            { view: 'checkin', label: 'Travel Mode', description: "Card usage abroad.", icon: MapPinIcon },
-            { view: 'utilities', label: 'Bill Payment', description: "Utilities & Services.", icon: WrenchScrewdriverIcon },
-            { view: 'services', label: 'Subscriptions', description: "Recurring payments.", icon: ShoppingBagIcon },
-            { view: 'globalAid', label: 'Global Aid', description: "Philanthropy.", icon: HeartIcon },
+            { view: 'flights', labelKey: 'header_title_flights', description: "Book flights globally.", icon: AirplaneTicketIcon },
+            { view: 'checkin', labelKey: 'header_title_checkin', description: "Card usage abroad.", icon: MapPinIcon },
+            { view: 'utilities', labelKey: 'header_title_utilities', description: "Utilities & Services.", icon: WrenchScrewdriverIcon },
+            { view: 'services', labelKey: 'header_title_services', description: "Recurring payments.", icon: ShoppingBagIcon },
+            { view: 'globalAid', labelKey: 'header_title_globalAid', description: "Philanthropy.", icon: HeartIcon },
         ]
     },
     {
         id: 'Support',
-        title: 'System & Support',
+        titleKey: 'nav_support',
         items: [
-            { view: 'security', label: 'Security Center', description: "2FA & Biometrics.", icon: ShieldCheckIcon },
-            { view: 'support', label: 'Help Desk', description: "24/7 Support.", icon: QuestionMarkCircleIcon },
-            { view: 'privacy', label: 'Privacy Control', description: "Data management.", icon: ShieldCheckIcon },
-            { view: 'platform', label: 'Settings', description: "App preferences.", icon: CogIcon },
+            { view: 'security', labelKey: 'header_title_security', description: "2FA & Biometrics.", icon: ShieldCheckIcon },
+            { view: 'support', labelKey: 'header_title_support', description: "24/7 Support.", icon: QuestionMarkCircleIcon },
+            { view: 'privacy', labelKey: 'header_title_privacy', description: "Data management.", icon: ShieldCheckIcon },
+            { view: 'platform', labelKey: 'header_title_platform', description: "App preferences.", icon: CogIcon },
         ]
     },
 ];
 
 export const MegaMenu: React.FC<MegaMenuProps> = ({ isOpen, onClose, activeView, setActiveView, userProfile, onOpenSendMoneyFlow, onOpenWireTransfer }) => {
     const [hoveredCategory, setHoveredCategory] = useState<MenuCategory>('Banking');
+    const { t } = useLanguage();
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -171,7 +173,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ isOpen, onClose, activeView,
                             >
                                 <h3 className="flex items-center gap-3 text-xs font-bold text-primary-400 uppercase tracking-widest pb-2 border-b border-white/5 group-hover/category:border-primary/30 transition-colors duration-500">
                                     <span className="w-2 h-2 rounded-full bg-primary group-hover/category:shadow-[0_0_10px_rgba(0,82,255,0.8)] transition-all"></span>
-                                    {category.title}
+                                    {t(category.titleKey)}
                                 </h3>
                                 <ul className="space-y-1">
                                     {category.items.map((item, itemIndex) => {
@@ -193,7 +195,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ isOpen, onClose, activeView,
                                                         <Icon className="w-5 h-5" />
                                                     </div>
                                                     <div>
-                                                        <p className={`font-semibold text-sm ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>{item.label}</p>
+                                                        <p className={`font-semibold text-sm ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>{t(item.labelKey)}</p>
                                                         <p className="text-[11px] text-slate-500 group-hover:text-slate-400">{item.description}</p>
                                                     </div>
                                                 </button>

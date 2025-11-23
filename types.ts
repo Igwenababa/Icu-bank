@@ -1,3 +1,4 @@
+
 // FIX: Import React to make React types like `ComponentType` available in this file.
 import React from 'react';
 
@@ -95,6 +96,8 @@ export interface RealAccountDetails {
   swiftBic: string;
 }
 
+export type PaymentMethodType = 'BANK' | 'PAYPAL' | 'CASHAPP' | 'ZELLE' | 'WESTERN_UNION' | 'MONEYGRAM';
+
 export interface Recipient {
   id: string;
   fullName: string;
@@ -111,6 +114,8 @@ export interface Recipient {
   realDetails: RealAccountDetails;
   recipientType?: 'bank' | 'service';
   serviceName?: 'PayPal' | 'CashApp' | 'Zelle' | 'Western Union' | 'MoneyGram' | string;
+  paymentMethod?: PaymentMethodType;
+  serviceIdentifier?: string; // e.g. email, cashtag, phone
 }
 
 
@@ -150,7 +155,8 @@ export interface Transaction {
   }
   reviewed?: boolean;
   splitGroupId?: string;
-  transferMethod?: 'wire';
+  transferMethod?: 'wire' | 'service' | 'bank';
+  paymentMethod?: PaymentMethodType;
   clearanceFeePaid?: boolean;
 }
 

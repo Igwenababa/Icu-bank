@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Account, AccountType, View } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, VerifiedBadgeIcon, SpinnerIcon, ClockIcon } from './Icons';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AccountCarouselCardProps {
     account: Account;
@@ -12,6 +13,8 @@ interface AccountCarouselCardProps {
 }
 
 const AccountCarouselCard: React.FC<AccountCarouselCardProps> = ({ account, isBalanceVisible, onViewDetails, displayCurrency, exchangeRate }) => {
+    const { t } = useLanguage();
+
     if (account.status === 'Provisioning') {
         return (
             <div className="relative w-full rounded-2xl shadow-digital-inset overflow-hidden text-slate-300 bg-slate-700/50 flex flex-col items-center justify-center text-center p-6" style={{ height: '220px' }}>
@@ -44,7 +47,7 @@ const AccountCarouselCard: React.FC<AccountCarouselCardProps> = ({ account, isBa
                 <p className="text-sm font-mono opacity-80 drop-shadow-sm">{account.accountNumber}</p>
             </div>
             <div className="flex-grow flex flex-col justify-center">
-                <p className="text-sm opacity-80">Available Balance</p>
+                <p className="text-sm opacity-80">{t('label_available_balance')}</p>
                 <p className={`text-4xl font-bold tracking-wider transition-all duration-300 ${!isBalanceVisible ? 'blur-md' : ''}`} style={{ textShadow: '1px 1px 5px rgba(0,0,0,0.5)' }}>
                     {isBalanceVisible ? convertedBalance.toLocaleString('en-US', { style: 'currency', currency: displayCurrency }) : '$ ••••••••'}
                 </p>
@@ -57,7 +60,7 @@ const AccountCarouselCard: React.FC<AccountCarouselCardProps> = ({ account, isBa
                     </div>
                 )}
                 <button onClick={onViewDetails} className="text-xs font-bold bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full transition-colors">
-                    View Details &rarr;
+                    {t('action_view_details')} &rarr;
                 </button>
             </div>
         </div>

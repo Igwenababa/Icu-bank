@@ -77,13 +77,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
   displayCurrency = 'USD',
 }) => {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    const time = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
-    return `Good ${time}, ${userProfile.name.split(' ')[0]}`;
-  }, [userProfile.name]);
+    const name = userProfile.name.split(' ')[0];
+    // Simple greeting localization
+    if (language === 'es') {
+        const time = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
+        return `${time}, ${name}`;
+    } else if (language === 'fr') {
+        return `Bonjour, ${name}`;
+    } else {
+        const time = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+        return `Good ${time}, ${name}`;
+    }
+  }, [userProfile.name, language]);
 
   const activeTravelPlans = travelPlans.filter(plan => plan.status === TravelPlanStatus.ACTIVE);
 
@@ -102,7 +111,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
-              Secure Session Active
+              {t('label_secure_session')}
           </p>
         </div>
          <div className="flex items-center gap-3 px-4 py-2 bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-full shadow-lg">
@@ -117,7 +126,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <GlobeAmericasIcon className="w-6 h-6 text-blue-400" />
           </div>
           <div>
-             <p className="text-sm font-bold text-blue-100">Travel Mode Active</p>
+             <p className="text-sm font-bold text-blue-100">{t('label_travel_mode')}</p>
              <p className="text-xs text-blue-300/80">Cards authorized for use in: {activeTravelPlans.map(p => p.country.name).join(', ')}.</p>
           </div>
         </div>
@@ -139,11 +148,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="relative z-10 p-6 pb-2 flex flex-col lg:flex-row justify-between items-end gap-6 border-b border-white/5 mb-6">
                     <div className="mb-4 lg:mb-0">
                         <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                            My Accounts
-                            <span className="bg-white/10 text-slate-300 text-[10px] px-2 py-0.5 rounded-full border border-white/5 tracking-wide">{accounts.length} ACTIVE</span>
+                            {t('section_my_accounts')}
+                            <span className="bg-white/10 text-slate-300 text-[10px] px-2 py-0.5 rounded-full border border-white/5 tracking-wide">{accounts.length} {t('status_active').toUpperCase()}</span>
                         </h3>
                         <button onClick={() => setActiveView('accounts')} className="text-xs font-bold text-primary-400 hover:text-primary-300 tracking-wide uppercase transition-colors mt-2 flex items-center gap-1">
-                            Manage Portfolio <ArrowUpCircleIcon className="w-3 h-3 rotate-45" />
+                            {t('action_manage_portfolio')} <ArrowUpCircleIcon className="w-3 h-3 rotate-45" />
                         </button>
                     </div>
 
@@ -153,9 +162,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {/* Financial Health Pill */}
                         <div className="flex items-center justify-between gap-4 bg-slate-800/50 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5 min-w-[180px] hover:bg-slate-800/70 transition-colors">
                             <div>
-                                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Fin. Health</div>
+                                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{t('label_financial_health')}</div>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-emerald-400 font-bold text-sm">Excellent</span>
+                                    <span className="text-emerald-400 font-bold text-sm">{t('status_excellent')}</span>
                                 </div>
                             </div>
                             <div className="relative">
@@ -173,7 +182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <div className="flex items-center justify-between gap-6 bg-gradient-to-r from-slate-800/80 to-slate-900/80 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 min-w-[240px] shadow-lg">
                             <div>
                                 <div className="flex items-center gap-2 text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">
-                                    Total Net Worth
+                                    {t('label_total_net_worth')}
                                     <button 
                                         onClick={() => setIsBalanceVisible(!isBalanceVisible)} 
                                         className="text-slate-500 hover:text-white transition-colors"
@@ -210,31 +219,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Shortcuts Grid */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-3xl border border-white/5 p-6 shadow-lg">
-                <h3 className="text-lg font-bold text-white mb-5">Quick Actions</h3>
+                <h3 className="text-lg font-bold text-white mb-5">{t('section_quick_actions')}</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                      <button onClick={() => setActiveView('services')} className="p-4 bg-slate-700/30 hover:bg-slate-700/60 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all border border-white/5 hover:border-white/10 group">
                         <div className="p-2.5 bg-primary/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
                             <CreditCardIcon className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">Pay Bills</span>
+                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">{t('quick_actions_pay_bills')}</span>
                      </button>
                      <button onClick={() => setActiveView('checkin')} className="p-4 bg-slate-700/30 hover:bg-slate-700/60 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all border border-white/5 hover:border-white/10 group">
                         <div className="p-2.5 bg-blue-500/20 rounded-xl text-blue-400 group-hover:scale-110 transition-transform">
                             <GlobeAmericasIcon className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">Travel Mode</span>
+                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">{t('header_title_checkin')}</span>
                      </button>
                       <button onClick={() => setActiveView('invest')} className="p-4 bg-slate-700/30 hover:bg-slate-700/60 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all border border-white/5 hover:border-white/10 group">
                         <div className="p-2.5 bg-purple-500/20 rounded-xl text-purple-400 group-hover:scale-110 transition-transform">
                             <TrendingUpIcon className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">Investments</span>
+                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">{t('header_title_invest')}</span>
                      </button>
                      <button onClick={() => setActiveView('support')} className="p-4 bg-slate-700/30 hover:bg-slate-700/60 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all border border-white/5 hover:border-white/10 group">
                         <div className="p-2.5 bg-orange-500/20 rounded-xl text-orange-400 group-hover:scale-110 transition-transform">
                             <BuildingOfficeIcon className="w-6 h-6" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">Support</span>
+                        <span className="text-xs font-semibold text-slate-300 group-hover:text-white">{t('header_title_support')}</span>
                      </button>
                 </div>
             </section>
@@ -251,8 +260,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {/* Recent Activity */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-3xl border border-white/5 p-6 shadow-lg">
                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-white">Recent Activity</h3>
-                    <button onClick={() => setActiveView('history')} className="text-xs font-bold text-primary-400 hover:text-primary-300 tracking-wide uppercase transition-colors">View All History</button>
+                    <h3 className="text-xl font-bold text-white">{t('section_recent_activity')}</h3>
+                    <button onClick={() => setActiveView('history')} className="text-xs font-bold text-primary-400 hover:text-primary-300 tracking-wide uppercase transition-colors">{t('action_view_all')}</button>
                 </div>
                 <div className="space-y-1">
                      {transactions.slice(0, 5).map(tx => <DashboardTransactionRow key={tx.id} tx={tx} />)}
@@ -262,7 +271,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
              {/* Financial News Compact */}
              <section>
                 <div className="mb-4 px-1">
-                     <h3 className="text-xl font-bold text-white">Market Insights</h3>
+                     <h3 className="text-xl font-bold text-white">{t('section_market_insights')}</h3>
                 </div>
                 <FinancialNews />
              </section>

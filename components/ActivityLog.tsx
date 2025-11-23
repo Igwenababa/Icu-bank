@@ -5,7 +5,6 @@ import {
     CheckCircleIcon, 
     ClockIcon, 
     SearchIcon, 
-    // FIX: Add missing XCircleIcon
     XCircleIcon, 
     DepositIcon, 
     getBankIcon,
@@ -204,17 +203,41 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<TransactionStatus | 'All'>('All');
+    const [typeFilter, setTypeFilter] = useState<'All' | 'credit' | 'debit'>('All');
+    const [recipientFilter, setRecipientFilter] = useState<string>('All');
     const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
     const [transactionToResolve, setTransactionToResolve] = useState<Transaction | null>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [pdfData, setPdfData] = useState<{ transaction: Transaction; account: Account } | null>(null);
 
+    const uniqueRecipients = useMemo(() => {
+        const recipients = new Set<string>();
+        transactions.forEach(t => {
+            if (t.type === 'debit') {
+                recipients.add(t.recipient.fullName);
+            } else {
+                recipients.add('Deposit');
+            }
+        });
+        return Array.from(recipients).sort();
+    }, [transactions]);
 
     const filteredTransactions = useMemo(() => {
         let result = transactions;
 
         if (statusFilter !== 'All') {
             result = result.filter(t => t.status === statusFilter);
+        }
+
+        if (typeFilter !== 'All') {
+            result = result.filter(t => t.type === typeFilter);
+        }
+
+        if (recipientFilter !== 'All') {
+            result = result.filter(t => {
+                const name = t.type === 'credit' ? 'Deposit' : t.recipient.fullName;
+                return name === recipientFilter;
+            });
         }
 
         const term = searchTerm.toLowerCase().trim();
@@ -235,7 +258,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({
                 dateStr.includes(term)
             );
         });
-    }, [transactions, searchTerm, statusFilter]);
+    }, [transactions, searchTerm, statusFilter, typeFilter, recipientFilter]);
 
     const handleSelect = (id: string) => {
         setSelectedTransactions(prev => {
@@ -285,7 +308,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({
     return (
         <div className="space-y-8">
             <h2 className="text-2xl font-bold text-slate-800">Transaction History</h2>
-             <div className="flex flex-col md:flex-row gap-4">
+             <div className="flex flex-col gap-4">
                 <div className="relative flex-grow">
                     <input 
                       type="text"
@@ -305,16 +328,37 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({
                         </button>
                     )}
                 </div>
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as TransactionStatus | 'All')}
-                    className="p-3 bg-white text-slate-800 border border-slate-300 rounded-lg shadow-digital-inset focus:ring-2 focus:ring-primary md:w-64"
-                >
-                    <option value="All">All Statuses</option>
-                    {Object.values(TransactionStatus).map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                    ))}
-                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value as TransactionStatus | 'All')}
+                        className="p-3 bg-white text-slate-800 border border-slate-300 rounded-lg shadow-digital-inset focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="All">All Statuses</option>
+                        {Object.values(TransactionStatus).map((status) => (
+                            <option key={status} value={status}>{status}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value as 'All' | 'credit' | 'debit')}
+                        className="p-3 bg-white text-slate-800 border border-slate-300 rounded-lg shadow-digital-inset focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="All">All Types</option>
+                        <option value="debit">Debit (Sent)</option>
+                        <option value="credit">Credit (Received)</option>
+                    </select>
+                    <select
+                        value={recipientFilter}
+                        onChange={(e) => setRecipientFilter(e.target.value)}
+                        className="p-3 bg-white text-slate-800 border border-slate-300 rounded-lg shadow-digital-inset focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="All">All Recipients</option>
+                        {uniqueRecipients.map((recipient) => (
+                            <option key={recipient} value={recipient}>{recipient}</option>
+                        ))}
+                    </select>
+                </div>
               </div>
             <div className="bg-white rounded-2xl shadow-digital overflow-hidden">
                  <div className="overflow-x-auto">
