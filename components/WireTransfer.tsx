@@ -108,6 +108,7 @@ export const WireTransfer: React.FC<WireTransferProps> = ({ accounts, onSendWire
         transferType: 'domestic',
         recipientCountry: ALL_COUNTRIES.find(c => c.code === 'US') as Country,
         recipientName: '',
+        recipientNickname: '',
         recipientAddress: '',
         recipientCity: '',
         recipientState: '',
@@ -164,6 +165,7 @@ export const WireTransfer: React.FC<WireTransferProps> = ({ accounts, onSendWire
         setFormData(prev => ({
             ...prev,
             recipientName: recipient.fullName,
+            recipientNickname: recipient.nickname || '',
             recipientAddress: recipient.streetAddress || '',
             recipientCity: recipient.city || '',
             recipientState: recipient.stateProvince || '',
@@ -253,6 +255,7 @@ export const WireTransfer: React.FC<WireTransferProps> = ({ accounts, onSendWire
         const recipientForTx: Recipient = {
             id: `temp_${Date.now()}`,
             fullName: formData.recipientName,
+            nickname: formData.recipientNickname,
             bankName: formData.bankName,
             accountNumber: `•••• ${formData.accountNumber.slice(-4)}`,
             country: formData.recipientCountry,
@@ -287,6 +290,7 @@ export const WireTransfer: React.FC<WireTransferProps> = ({ accounts, onSendWire
             if (saveRecipient) {
                 const recipientDataToSave = {
                     fullName: formData.recipientName,
+                    nickname: formData.recipientNickname,
                     bankName: formData.bankName,
                     accountNumber: formData.accountNumber,
                     swiftBic: formData.transferType === 'international' ? formData.swiftBic : formData.routingNumber,
@@ -394,6 +398,7 @@ export const WireTransfer: React.FC<WireTransferProps> = ({ accounts, onSendWire
                                         </div>
                                     )}
                                     <input type="text" name="recipientName" value={formData.recipientName} onChange={handleChange} className={inputClasses('recipientName')} placeholder="Recipient Full Name" />
+                                    <input type="text" name="recipientNickname" value={formData.recipientNickname} onChange={handleChange} className={inputClasses('recipientNickname')} placeholder="Beneficiary Alias / Nickname (Optional)" />
                                     <input type="text" name="recipientAddress" value={formData.recipientAddress} onChange={handleChange} className={inputClasses('recipientAddress')} placeholder="Street Address" />
                                     <div className="grid grid-cols-3 gap-4">
                                          <input type="text" name="recipientCity" value={formData.recipientCity} onChange={handleChange} className={`${inputClasses('recipientCity')} col-span-2`} placeholder="City" />

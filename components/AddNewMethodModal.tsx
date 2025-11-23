@@ -7,7 +7,7 @@ import {
     CheckCircleIcon, 
     SpinnerIcon, 
     ShieldCheckIcon, 
-    LockClosedIcon,
+    LockClosedIcon, 
     GlobeAmericasIcon,
     getBankIcon,
     getServiceIcon
@@ -26,6 +26,12 @@ const FEATURED_SERVICES = [
     "PayPal", "CashApp", "Zelle", "Venmo", "Wise", "Revolut", "Western Union", "MoneyGram"
 ];
 
+type PaymentMethodItem = {
+    id: string;
+    name: string;
+    type: 'BANK' | 'SERVICE';
+};
+
 export const AddNewMethodModal: React.FC<AddNewMethodModalProps> = ({ onClose, onAdd }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'ALL' | 'BANKS' | 'SERVICES'>('ALL');
@@ -34,7 +40,7 @@ export const AddNewMethodModal: React.FC<AddNewMethodModalProps> = ({ onClose, o
 
     const filteredMethods = useMemo(() => {
         const term = searchTerm.toLowerCase();
-        const methods = [];
+        const methods: PaymentMethodItem[] = [];
 
         if (activeTab === 'ALL' || activeTab === 'BANKS') {
             FEATURED_BANKS.forEach(bank => {
@@ -55,7 +61,7 @@ export const AddNewMethodModal: React.FC<AddNewMethodModalProps> = ({ onClose, o
         return methods;
     }, [searchTerm, activeTab]);
 
-    const handleSelect = (method: { id: string, name: string, type: 'BANK' | 'SERVICE' }) => {
+    const handleSelect = (method: PaymentMethodItem) => {
         setAddingMethod(method.name);
         setConnectionStep(1);
 

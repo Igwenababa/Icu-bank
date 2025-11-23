@@ -440,7 +440,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({ onClose, o
                                   {errors.fullName && touched.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
                               </div>
                               <div>
-                                  <label className="block text-sm font-medium text-slate-300">Nickname (Optional)</label>
+                                  <label className="block text-sm font-medium text-slate-300">Beneficiary Alias / Nickname (Optional)</label>
                                   <input type="text" name="nickname" value={formData.nickname} onChange={handleChange} className={inputClasses('nickname')} placeholder="e.g., London Office" />
                               </div>
                               <div>
