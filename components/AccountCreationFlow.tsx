@@ -215,7 +215,7 @@ export const AccountCreationFlow: React.FC<AccountCreationFlowProps> = ({ onBack
 
     const handleOtpSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (otp === '123456') {
+        if (otp === '903414') {
             setErrors({});
             setStep(7); 
             setTimeout(() => {

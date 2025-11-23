@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SpinnerIcon, DevicePhoneMobileIcon, CheckCircleIcon, KeypadIcon, XIcon } from './Icons.tsx';
 import { SecuritySettings } from '../types.ts';
@@ -15,7 +16,7 @@ export const Setup2FAModal: React.FC<Setup2FAModalProps> = ({ onClose, settings,
     const [otp, setOtp] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState('');
-    const phone = '+1 (***) ***-1234'; // Masked phone number for display
+    const phone = '+1 (***) ***-8271'; // Masked phone number for display
 
     const handleEnableSms = () => {
         setIsProcessing(true);
@@ -28,7 +29,7 @@ export const Setup2FAModal: React.FC<Setup2FAModalProps> = ({ onClose, settings,
 
     const handleSubmitSms = () => {
         setError('');
-        if (otp !== '123456') { // Demo OTP
+        if (otp !== '903414') { // Demo OTP
             setError('Invalid verification code.');
             return;
         }
@@ -47,7 +48,7 @@ export const Setup2FAModal: React.FC<Setup2FAModalProps> = ({ onClose, settings,
     const handleSubmitApp = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (otp !== '123456') { // Demo OTP, same as SMS for simplicity
+        if (otp !== '903414') { // Demo OTP, same as SMS for simplicity
             setError('Invalid verification code.');
             return;
         }

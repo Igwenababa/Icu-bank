@@ -506,7 +506,7 @@ export const SELF_RECIPIENT: Recipient = {
 
 
 export const INITIAL_ACCOUNTS: Account[] = [
-    { id: 'acc_checking_1', type: AccountType.CHECKING, nickname: 'Main Checking', accountNumber: '**** 1234', fullAccountNumber: '1234567890121234', balance: 1978620.38, features: ['International Transfers', 'Debit Card', 'FDIC Insured'], status: 'Active' },
+    { id: 'acc_checking_1', type: AccountType.CHECKING, nickname: 'Main Checking', accountNumber: '**** 5480', fullAccountNumber: '1234567890125480', balance: 1978620.38, features: ['International Transfers', 'Debit Card', 'FDIC Insured'], status: 'Active' },
     { id: 'acc_savings_1', type: AccountType.SAVINGS, nickname: 'Emergency Fund', accountNumber: '**** 5678', fullAccountNumber: '9876543210985678', balance: 2500, features: ['4.5% APY', 'Goal Setting', 'Automated Savings'], status: 'Active' },
     { id: 'acc_business_1', type: AccountType.BUSINESS, accountNumber: '**** 9012', fullAccountNumber: '5432109876549012', balance: 0, features: ['Multi-user Access', 'Invoicing Tools', 'Expense Tracking'], status: 'Active' },
 ];

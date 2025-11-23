@@ -2,13 +2,14 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Recipient, Transaction, Account, SecuritySettings, View, TransactionStatus, AccountType, UserProfile, PaymentMethodType } from '../types.ts';
 import { STANDARD_FEE, EXPRESS_FEE, EXCHANGE_RATES, TRANSFER_PURPOSES, USER_PIN, NETWORK_AUTH_CODE } from '../constants.ts';
-import { SpinnerIcon, CheckCircleIcon, ShieldCheckIcon, XIcon, NetworkIcon, UsersIcon, SendIcon, CameraIcon, CalendarDaysIcon, ArrowPathIcon, ExclamationTriangleIcon, GlobeAmericasIcon, LockClosedIcon, WalletIcon, ServerIcon, WifiIcon, BankIcon, PayPalIcon, CashAppIcon, ZelleIcon, WesternUnionIcon, MoneyGramIcon } from './Icons.tsx';
+import { SpinnerIcon, CheckCircleIcon, ShieldCheckIcon, XIcon, NetworkIcon, UsersIcon, SendIcon, CameraIcon, CalendarDaysIcon, ArrowPathIcon, ExclamationTriangleIcon, GlobeAmericasIcon, LockClosedIcon, WalletIcon, ServerIcon, WifiIcon, BankIcon, PayPalIcon, CashAppIcon, ZelleIcon, WesternUnionIcon, MoneyGramIcon, PlusIcon, getBankIcon, getServiceIcon } from './Icons.tsx';
 import { triggerHaptic } from '../utils/haptics.ts';
 import { PaymentReceipt } from './PaymentReceipt.tsx';
 import { CheckDepositFlow } from './CheckDepositFlow.tsx';
 import { RecipientSelector } from './RecipientSelector.tsx';
 import { sendSmsNotification, generateTransactionReceiptSms } from '../services/notificationService.ts';
 import { ComplianceHaltModal } from './ComplianceHaltModal.tsx';
+import { AddNewMethodModal } from './AddNewMethodModal.tsx';
 
 
 interface SendMoneyFlowProps {
@@ -43,13 +44,14 @@ const FREQUENCIES = [
     { id: 'monthly', label: 'Monthly Standing Order' },
 ];
 
-const PAYMENT_METHODS: { id: PaymentMethodType; label: string; icon: React.ReactElement; placeholder: string }[] = [
-    { id: 'BANK', label: 'Bank Transfer', icon: <BankIcon className="w-5 h-5"/>, placeholder: '' },
-    { id: 'PAYPAL', label: 'PayPal', icon: <PayPalIcon className="w-5 h-5"/>, placeholder: 'Enter email or phone' },
-    { id: 'CASHAPP', label: 'Cash App', icon: <CashAppIcon className="w-5 h-5"/>, placeholder: 'Enter $Cashtag' },
-    { id: 'ZELLE', label: 'Zelle', icon: <ZelleIcon className="w-5 h-5"/>, placeholder: 'Enter email or phone' },
-    { id: 'WESTERN_UNION', label: 'Western Union', icon: <WesternUnionIcon className="w-5 h-5"/>, placeholder: 'Enter recipient name' },
-    { id: 'MONEYGRAM', label: 'MoneyGram', icon: <MoneyGramIcon className="w-5 h-5"/>, placeholder: 'Enter recipient name' },
+// Initial static list
+const INITIAL_PAYMENT_METHODS: { id: string; label: string; type: 'BANK' | 'SERVICE'; placeholder: string }[] = [
+    { id: 'BANK', label: 'Bank Transfer', type: 'BANK', placeholder: '' },
+    { id: 'PAYPAL', label: 'PayPal', type: 'SERVICE', placeholder: 'Enter email or phone' },
+    { id: 'CASHAPP', label: 'Cash App', type: 'SERVICE', placeholder: 'Enter $Cashtag' },
+    { id: 'ZELLE', label: 'Zelle', type: 'SERVICE', placeholder: 'Enter email or phone' },
+    { id: 'WESTERN_UNION', label: 'Western Union', type: 'SERVICE', placeholder: 'Enter recipient name' },
+    { id: 'MONEYGRAM', label: 'MoneyGram', type: 'SERVICE', placeholder: 'Enter recipient name' },
 ];
 
 const NetworkHandshake: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -132,6 +134,7 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   const [activeTab, setActiveTab] = useState<'send' | 'split' | 'deposit'>(initialTab || 'send');
   const [step, setStep] = useState(0); // 0: Details, 1: Review, 2: Authorize, 3: SecurityCheck, 4: Complete
   const [isRecipientSelectorOpen, setIsRecipientSelectorOpen] = useState(false);
+  const [isAddMethodModalOpen, setIsAddMethodModalOpen] = useState(false);
 
   // Calculate internal and external accounts
   const { internalAccounts, externalAccounts } = useMemo(() => {
@@ -141,8 +144,9 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   }, [accounts]);
   
   // Form State (Single Send)
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState(INITIAL_PAYMENT_METHODS);
   const [sourceAccountId, setSourceAccountId] = useState<string>(() => (internalAccounts.length > 0 ? internalAccounts[0].id : ''));
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('BANK');
+  const [selectedMethodId, setSelectedMethodId] = useState<string>('BANK');
   const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
   const [serviceIdentifier, setServiceIdentifier] = useState(''); // Holds email, cashtag, etc.
   const [sendAmount, setSendAmount] = useState('');
@@ -178,6 +182,7 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   const [createdTransaction, setCreatedTransaction] = useState<Transaction | null>(null);
   
   const sourceAccount = accounts.find(acc => acc.id === sourceAccountId);
+  const currentMethod = availablePaymentMethods.find(m => m.id === selectedMethodId);
 
   // Fetch Rate
   useEffect(() => {
@@ -234,18 +239,18 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
   }, [hapticsEnabled]);
 
   const handleNextStep = useCallback(() => {
-    if (selectedMethod === 'CASHAPP' && !serviceIdentifier.startsWith('$')) {
+    if (selectedMethodId === 'CASHAPP' && !serviceIdentifier.startsWith('$')) {
         setError("Cashtag must start with '$'");
         return;
     }
-    if ((selectedMethod === 'PAYPAL' || selectedMethod === 'ZELLE') && !serviceIdentifier.includes('@') && !/^\d+$/.test(serviceIdentifier.replace(/[\s-]/g, ''))) {
+    if ((selectedMethodId === 'PAYPAL' || selectedMethodId === 'ZELLE') && !serviceIdentifier.includes('@') && !/^\d+$/.test(serviceIdentifier.replace(/[\s-]/g, ''))) {
         setError("Please enter a valid email or phone number.");
         return;
     }
     setError('');
     hapticTrigger();
     setStep(prev => prev + 1);
-  }, [hapticTrigger, selectedMethod, serviceIdentifier]);
+  }, [hapticTrigger, selectedMethodId, serviceIdentifier]);
 
   const handlePrevStep = useCallback(() => {
     hapticTrigger();
@@ -337,14 +342,14 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
     const recipientToUse: Recipient = selectedRecipient || {
         id: `temp_${Date.now()}`,
         fullName: serviceIdentifier || 'External User',
-        bankName: selectedMethod === 'BANK' ? 'Unknown Bank' : PAYMENT_METHODS.find(m => m.id === selectedMethod)?.label || 'Service',
+        bankName: currentMethod?.type === 'BANK' ? 'Unknown Bank' : currentMethod?.label || 'Service',
         accountNumber: 'N/A',
         country: { code: 'US', name: 'United States', currency: 'USD', symbol: '$' }, // Default fallback
         deliveryOptions: { bankDeposit: true, cardDeposit: true, cashPickup: false },
         realDetails: { accountNumber: 'N/A', swiftBic: 'N/A' },
-        recipientType: selectedMethod === 'BANK' ? 'bank' : 'service',
-        serviceName: selectedMethod === 'BANK' ? undefined : PAYMENT_METHODS.find(m => m.id === selectedMethod)?.label,
-        paymentMethod: selectedMethod,
+        recipientType: currentMethod?.type === 'BANK' ? 'bank' : 'service',
+        serviceName: currentMethod?.type === 'BANK' ? undefined : currentMethod?.label,
+        paymentMethod: selectedMethodId as PaymentMethodType,
         serviceIdentifier: serviceIdentifier
     };
 
@@ -359,8 +364,8 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
       deliverySpeed: deliverySpeed,
       purpose: purpose,
       description: finalDescription,
-      transferMethod: selectedMethod === 'BANK' ? 'bank' : 'service',
-      paymentMethod: selectedMethod,
+      transferMethod: currentMethod?.type === 'BANK' ? 'bank' : 'service',
+      paymentMethod: selectedMethodId as PaymentMethodType,
     });
 
     if (newTransaction) {
@@ -414,10 +419,23 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
       setFrequency('one-time');
       setScheduledDate('');
       setServiceIdentifier('');
-      setSelectedMethod('BANK');
+      setSelectedMethodId('BANK');
       setSelectedRecipient(null);
       setConsents({ accuracy: false, auth: false, aml: false });
       setIsNetworkHandshakeActive(false);
+  };
+
+  const handleAddMethod = (id: string, name: string, type: 'BANK' | 'SERVICE') => {
+      const newMethod = {
+          id: id,
+          label: name,
+          type: type,
+          placeholder: type === 'BANK' ? '' : `Enter details for ${name}`
+      };
+      setAvailablePaymentMethods(prev => [...prev, newMethod]);
+      setSelectedMethodId(id);
+      setSelectedRecipient(null); 
+      setServiceIdentifier('');
   };
 
   const totalSteps = 5; // Details, Review, Authorize, Security, Complete
@@ -425,6 +443,14 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
 
   return (
     <>
+        {/* Add New Method Modal */}
+        {isAddMethodModalOpen && (
+            <AddNewMethodModal 
+                onClose={() => setIsAddMethodModalOpen(false)}
+                onAdd={handleAddMethod}
+            />
+        )}
+
         {/* Strict Compliance Halt Modal */}
         {showComplianceHalt && (
             <ComplianceHaltModal
@@ -543,16 +569,33 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                             <div>
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Payment Method</label>
                                 <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                                    {PAYMENT_METHODS.map(method => (
-                                        <button
-                                            key={method.id}
-                                            onClick={() => { setSelectedMethod(method.id); setSelectedRecipient(null); setServiceIdentifier(''); }}
-                                            className={`flex-shrink-0 flex flex-col items-center justify-center p-3 rounded-xl border min-w-[90px] transition-all ${selectedMethod === method.id ? 'bg-primary/20 border-primary text-white shadow-digital-inset' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:border-white/20'}`}
-                                        >
-                                            <div className={`mb-2 ${selectedMethod === method.id ? 'text-primary' : 'text-slate-500'}`}>{method.icon}</div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider">{method.label}</span>
-                                        </button>
-                                    ))}
+                                    {availablePaymentMethods.map(method => {
+                                        const Icon = method.type === 'BANK' ? getBankIcon(method.label) : getServiceIcon(method.label);
+                                        
+                                        return (
+                                            <button
+                                                key={method.id}
+                                                onClick={() => { setSelectedMethodId(method.id); setSelectedRecipient(null); setServiceIdentifier(''); }}
+                                                className={`flex-shrink-0 flex flex-col items-center justify-center p-3 rounded-xl border min-w-[100px] h-24 transition-all ${selectedMethodId === method.id ? 'bg-primary/20 border-primary text-white shadow-digital-inset' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:border-white/20'}`}
+                                            >
+                                                <div className={`mb-2 w-8 h-8 flex items-center justify-center ${selectedMethodId === method.id ? 'text-primary' : 'text-slate-500'}`}>
+                                                    <Icon className="w-full h-full object-contain"/>
+                                                </div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-center leading-tight line-clamp-1">{method.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                    
+                                    {/* Add New Button */}
+                                    <button
+                                        onClick={() => setIsAddMethodModalOpen(true)}
+                                        className="flex-shrink-0 flex flex-col items-center justify-center p-3 rounded-xl border border-white/10 border-dashed bg-slate-900/30 min-w-[100px] h-24 hover:bg-slate-800 transition-all text-slate-500 hover:text-white group"
+                                    >
+                                        <div className="mb-2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center group-hover:bg-slate-700 transition-colors">
+                                            <PlusIcon className="w-4 h-4"/>
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Add New</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -574,7 +617,7 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">To Beneficiary</label>
                                     
-                                    {selectedMethod === 'BANK' ? (
+                                    {currentMethod?.type === 'BANK' ? (
                                         <button onClick={() => setIsRecipientSelectorOpen(true)} className="w-full flex items-center justify-between bg-slate-950/50 border border-white/10 text-white p-4 rounded-xl hover:bg-slate-900/80 transition-all group h-[58px]">
                                             {selectedRecipient ? (
                                                 <div className="flex items-center gap-3 overflow-hidden">
@@ -598,10 +641,10 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                                 value={serviceIdentifier} 
                                                 onChange={(e) => setServiceIdentifier(e.target.value)} 
                                                 className="w-full bg-slate-950/50 border border-white/10 text-white p-4 pl-12 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-medium h-[58px]" 
-                                                placeholder={PAYMENT_METHODS.find(m => m.id === selectedMethod)?.placeholder}
+                                                placeholder={currentMethod?.placeholder}
                                             />
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                                                {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.icon}
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-6 h-6 flex items-center justify-center">
+                                                {React.createElement(getServiceIcon(currentMethod?.label || ''), { className: 'w-5 h-5' })}
                                             </div>
                                         </div>
                                     )}
@@ -677,8 +720,8 @@ export const SendMoneyFlow: React.FC<SendMoneyFlowProps> = ({ recipients, accoun
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Method</span>
                                         <span className="font-semibold flex items-center gap-1">
-                                            {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.icon}
-                                            {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.label}
+                                            {React.createElement(currentMethod?.type === 'BANK' ? getBankIcon(currentMethod?.label || '') : getServiceIcon(currentMethod?.label || ''), { className: 'w-4 h-4' })}
+                                            {currentMethod?.label}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">

@@ -1,3 +1,4 @@
+
 import { CustomerGroup, Transaction } from '../types.ts';
 
 // ===================================================================================
@@ -257,7 +258,7 @@ export const generateLoginAlertSms = (): string => {
 };
 
 export const generateOtpSms = (): string => {
-  return `Your iCredit Union® verification code is 123456. Do not share this code.`;
+  return `Your iCredit Union® verification code is 903414. Do not share this code.`;
 };
 
 export const generateOtpEmail = (userName: string): { subject: string, body: string } => {
@@ -266,7 +267,7 @@ export const generateOtpEmail = (userName: string): { subject: string, body: str
       <h2 style="color: #1f2937; font-size: 20px;">Confirm Your Action</h2>
       <p style="font-size: 16px; color: #4b5563;">Dear ${userName},</p>
       <p style="font-size: 16px; color: #4b5563;">Please use the following verification code to complete your action:</p>
-      <p style="font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 0.5em; margin: 20px 0; background-color: #f3f4f6; padding: 15px; border-radius: 4px;">123456</p>
+      <p style="font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 0.5em; margin: 20px 0; background-color: #f3f4f6; padding: 15px; border-radius: 4px;">903414</p>
       <p style="font-size: 14px; color: #6b7280;">This code will expire in 10 minutes. If you did not request this, please contact support immediately.</p>
     `;
     return { subject, body: generateEmailWrapper(subject, content) };
@@ -278,13 +279,13 @@ export const generateNewAccountOtpEmail = (userName: string): { subject: string,
       <h2 style="color: #1f2937; font-size: 20px;">Welcome! Please Verify Your Account</h2>
       <p style="font-size: 16px; color: #4b5563;">Dear ${userName},</p>
       <p style="font-size: 16px; color: #4b5563;">Thank you for creating an account. Please use the following one-time code to complete your registration:</p>
-      <p style="font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 0.5em; margin: 20px 0; background-color: #f3f4f6; padding: 15px; border-radius: 4px;">123456</p>
+      <p style="font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 0.5em; margin: 20px 0; background-color: #f3f4f6; padding: 15px; border-radius: 4px;">903414</p>
     `;
     return { subject, body: generateEmailWrapper(subject, content) };
 };
 
 export const generateNewAccountOtpSms = (): string => {
-  return `Your iCredit Union® account verification code is 123456. Welcome aboard!`;
+  return `Your iCredit Union® account verification code is 903414. Welcome aboard!`;
 };
 
 export const generateFullWelcomeEmail = (userName: string, accounts: { type: string, number: string }[]): { subject: string, body: string } => {

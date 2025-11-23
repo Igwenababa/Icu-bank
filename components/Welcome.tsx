@@ -37,7 +37,7 @@ type WelcomeView = 'signin' | 'forgot_password' | 'forgot_password_confirmation'
 
 const USER_EMAIL = "mrikimc@gmail.com";
 const USER_NAME = "Herbert Lawrence";
-const USER_PHONE = "+1-555-012-1234";
+const USER_PHONE = "+1-555-012-8271";
 
 const BACKGROUND_IMAGES = [
     "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?q=80&w=2940&auto=format&fit=crop", // Original
@@ -413,7 +413,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onLogin, onStartCreateAccount 
         </div>
         <div>
             <h2 className="text-xl font-bold text-white">Two-Factor Authentication</h2>
-            <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">Enter the 6-digit code sent to <strong>...1234</strong>.</p>
+            <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">Enter the 6-digit code sent to <strong>...8271</strong>.</p>
         </div>
         <form onSubmit={handleMfaSubmit}>
             <input

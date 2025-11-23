@@ -33,7 +33,7 @@ interface AddRecipientModalProps {
 type ModalStep = 'form' | 'otp';
 const USER_EMAIL = "mrikimc@gmail.com";
 const USER_NAME = "Herbert Lawrence";
-const USER_PHONE = "+1-555-012-1234";
+const USER_PHONE = "+1-555-012-8271";
 
 const getAddressConfig = (countryCode?: string) => {
     switch (countryCode) {

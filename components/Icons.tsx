@@ -205,6 +205,30 @@ export const MoneyGramIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+export const VenmoIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg" fill="#008CFF">
+        <path d="M19.55 4.55L15.25 20.8L10.2 20.8L4.45 7.5L8.75 7.5L11.95 16.2L15.35 4.55L19.55 4.55Z" fill="white"/>
+        <path d="M3 3h18v18H3V3z" fill="transparent"/>
+        <path d="M17.5 2h-11C4.5 2 3 3.5 3 5.5v13C3 20.5 4.5 22 6.5 22h11c2 0 3.5-1.5 3.5-3.5v-13C21 3.5 19.5 2 17.5 2z" fill="#3D95CE"/>
+        <path d="M16.3 5.8l-3.9 14.8h-4.6l-5.3-12h4l2.9 7.9 3.1-10.7h3.8z" fill="white"/>
+    </svg>
+);
+
+export const WiseIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
+        <path d="M4.5 12.5l7.5-7.5 7.5 7.5" stroke="#2ED06E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+        <path d="M12 5v14" stroke="#163355" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
+);
+
+export const RevolutIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg" fill="white">
+        <rect width="24" height="24" rx="4" fill="black"/>
+        <path d="M17.5 6h-11C5.7 6 5 6.7 5 7.5v9c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5v-9c0-.8-.7-1.5-1.5-1.5z" fill="#FFF"/>
+        <path d="M12.7 9.5c-.2-.2-.5-.2-.7 0L8.5 13l-1.5-1.5c-.2-.2-.5-.2-.7 0-.2.2-.2.5 0 .7l1.9 1.9c.2.2.5.2.7 0l3.9-3.9c.2-.2.2-.5-.1-.7z" fill="#000"/>
+    </svg>
+);
+
 export const OnfidoIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="#342580" strokeWidth="2"/>
@@ -816,6 +840,9 @@ export const getServiceIcon = (serviceName: string): React.ComponentType<{ class
         'Zelle': ZelleIcon,
         'Western Union': WesternUnionIcon,
         'MoneyGram': MoneyGramIcon,
+        'Venmo': VenmoIcon,
+        'Wise': WiseIcon,
+        'Revolut': RevolutIcon
     };
     return serviceIcons[serviceName] || BankIcon;
 };

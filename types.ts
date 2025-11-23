@@ -96,7 +96,7 @@ export interface RealAccountDetails {
   swiftBic: string;
 }
 
-export type PaymentMethodType = 'BANK' | 'PAYPAL' | 'CASHAPP' | 'ZELLE' | 'WESTERN_UNION' | 'MONEYGRAM';
+export type PaymentMethodType = 'BANK' | 'PAYPAL' | 'CASHAPP' | 'ZELLE' | 'WESTERN_UNION' | 'MONEYGRAM' | 'VENMO' | 'WISE' | 'REVOLUT' | 'CHIME' | 'CITI' | 'CAPITAL_ONE' | 'CHASE' | 'BOA' | string;
 
 export interface Recipient {
   id: string;
